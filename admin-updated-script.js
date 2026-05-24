@@ -441,6 +441,7 @@ function getShipments() {
         const data = response.json();
         return data;
     } catch (e) {
+        console.error('Error loading shipments from shipments.json:', e);
         return JSON.parse(localStorage.getItem('sfExpressShipments')) || {};
     }
 }
@@ -1558,11 +1559,6 @@ function showCreateShipmentModal(customer = null) {
         showNotification(`Shipment created! Tracking Code: ${result.shipment.trackingCode}`, 'success');
         loadShipmentList();
         populateShipmentSelector();
-        
-        // Automatically select the new shipment and initialize map
-        setTimeout(() => {
-            editShipment(result.shipment.trackingCode);
-        }, 500);
     }
 }
 
@@ -1578,26 +1574,50 @@ function editShipment(trackingCode) {
     currentShipmentId = trackingCode;
     trackingData = shipment;
     
+    // Scroll to the Current Tracking Status section
+    const statusSection = document.querySelector('.current-status');
+    if (statusSection) {
+        statusSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+    
     // Update form fields with shipment data
-    document.getElementById('editTrackingNumber').value = shipment.trackingNumber || shipment.trackingCode;
-    document.getElementById('editCurrentStatus').value = shipment.currentStatus;
-    document.getElementById('editLastUpdate').value = shipment.lastUpdate;
-    document.getElementById('editEstimatedDelivery').value = shipment.estimatedDelivery;
+    const editTrackingNumber = document.getElementById('editTrackingNumber');
+    const editCurrentStatus = document.getElementById('editCurrentStatus');
+    const editLastUpdate = document.getElementById('editLastUpdate');
+    const editEstimatedDelivery = document.getElementById('editEstimatedDelivery');
+    
+    if (editTrackingNumber) editTrackingNumber.value = shipment.trackingNumber || shipment.trackingCode;
+    if (editCurrentStatus) editCurrentStatus.value = shipment.currentStatus;
+    if (editLastUpdate) editLastUpdate.value = shipment.lastUpdate;
+    if (editEstimatedDelivery) editEstimatedDelivery.value = shipment.estimatedDelivery;
     
     // Package details
-    document.getElementById('editTotalWeight').value = shipment.packageDetails.weight;
-    document.getElementById('editLuggageWeight').value = shipment.packageDetails.weightBreakdown?.luggage || 'N/A';
-    document.getElementById('editBoxWeight').value = shipment.packageDetails.weightBreakdown?.mentalBox || 'N/A';
-    document.getElementById('editDocumentsWeight').value = shipment.packageDetails.weightBreakdown?.documents || 'N/A';
-    document.getElementById('editServiceType').value = shipment.packageDetails.serviceType;
-    document.getElementById('editDeparture').value = shipment.packageDetails.departure;
-    document.getElementById('editDestination').value = shipment.packageDetails.destination;
+    const editTotalWeight = document.getElementById('editTotalWeight');
+    const editLuggageWeight = document.getElementById('editLuggageWeight');
+    const editBoxWeight = document.getElementById('editBoxWeight');
+    const editDocumentsWeight = document.getElementById('editDocumentsWeight');
+    const editServiceType = document.getElementById('editServiceType');
+    const editDeparture = document.getElementById('editDeparture');
+    const editDestination = document.getElementById('editDestination');
+    
+    if (editTotalWeight) editTotalWeight.value = shipment.packageDetails.weight;
+    if (editLuggageWeight) editLuggageWeight.value = shipment.packageDetails.weightBreakdown?.luggage || 'N/A';
+    if (editBoxWeight) editBoxWeight.value = shipment.packageDetails.weightBreakdown?.mentalBox || 'N/A';
+    if (editDocumentsWeight) editDocumentsWeight.value = shipment.packageDetails.weightBreakdown?.documents || 'N/A';
+    if (editServiceType) editServiceType.value = shipment.packageDetails.serviceType;
+    if (editDeparture) editDeparture.value = shipment.packageDetails.departure;
+    if (editDestination) editDestination.value = shipment.packageDetails.destination;
     
     // Contact information
-    document.getElementById('editSenderName').value = shipment.sender.name;
-    document.getElementById('editSenderAddress').value = shipment.sender.address;
-    document.getElementById('editReceiverName').value = shipment.receiver.name;
-    document.getElementById('editReceiverAddress').value = shipment.receiver.address;
+    const editSenderName = document.getElementById('editSenderName');
+    const editSenderAddress = document.getElementById('editSenderAddress');
+    const editReceiverName = document.getElementById('editReceiverName');
+    const editReceiverAddress = document.getElementById('editReceiverAddress');
+    
+    if (editSenderName) editSenderName.value = shipment.sender.name;
+    if (editSenderAddress) editSenderAddress.value = shipment.sender.address;
+    if (editReceiverName) editReceiverName.value = shipment.receiver.name;
+    if (editReceiverAddress) editReceiverAddress.value = shipment.receiver.address;
     
     // Also populate the status selector
     const statusSelector = document.getElementById('statusShipmentSelector');
@@ -1710,9 +1730,8 @@ function initializeAdminMap() {
     
     adminMap = L.map('adminMap').setView([trackingData.currentLocation.lat, trackingData.currentLocation.lng], 3);
     
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-        attribution: '© OpenStreetMap contributors © CARTO',
-        subdomains: 'abcd',
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors',
         maxZoom: 19
     }).addTo(adminMap);
     
