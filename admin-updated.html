@@ -94,29 +94,6 @@
         <!-- Main Content -->
         <main class="admin-main">
             <div class="admin-container">
-                <!-- Deployment Instructions -->
-                <section class="deployment-info">
-                    <h2>🚀 Netlify Deployment Instructions</h2>
-                    <div class="info-grid">
-                        <div class="info-card">
-                            <h3>Step 1: Make Changes</h3>
-                            <p>Edit any tracking information using the controls below</p>
-                        </div>
-                        <div class="info-card">
-                            <h3>Step 2: Generate JSON</h3>
-                            <p>Click "Generate Updated JSON" to create the new tracking-data.json file</p>
-                        </div>
-                        <div class="info-card">
-                            <h3>Step 3: Download & Replace</h3>
-                            <p>Download the JSON file and replace tracking-data.json in your project</p>
-                        </div>
-                        <div class="info-card">
-                            <h3>Step 4: Deploy</h3>
-                            <p>Push changes to Git and Netlify will auto-deploy with updates</p>
-                        </div>
-                    </div>
-                </section>
-
                 <!-- Quick Actions -->
                 <section class="quick-actions">
                     <h2>Quick Actions</h2>
@@ -150,6 +127,10 @@
                     <div class="shipment-controls">
                         <button class="btn btn-primary" onclick="showCreateShipmentModal()">Create New Shipment</button>
                         <button class="btn btn-secondary" onclick="loadShipmentList()">Refresh Shipments</button>
+                        <button class="btn btn-secondary" onclick="exportShipments()">Export Shipments</button>
+                    </div>
+                    <div class="shipment-search">
+                        <input type="text" id="shipmentSearch" placeholder="Search shipments..." onkeyup="filterShipments()">
                     </div>
                     <div id="shipmentList" class="shipment-list">
                         <!-- Shipments will be loaded here -->

@@ -525,12 +525,17 @@ function loadShipmentList() {
         const shipment = shipments[code];
         const shipmentItem = document.createElement('div');
         shipmentItem.className = 'shipment-item';
+        shipmentItem.setAttribute('data-tracking-code', shipment.trackingCode);
+        shipmentItem.setAttribute('data-sender', shipment.sender.name.toLowerCase());
+        shipmentItem.setAttribute('data-receiver', shipment.receiver.name.toLowerCase());
+        shipmentItem.setAttribute('data-status', shipment.currentStatus.toLowerCase());
         shipmentItem.innerHTML = `
             <div class="shipment-info">
                 <h4>${shipment.trackingCode}</h4>
                 <p>From: ${shipment.sender.name}</p>
                 <p>To: ${shipment.receiver.name}</p>
                 <p>Status: ${shipment.currentStatus}</p>
+                <p>Created: ${new Date(shipment.id).toLocaleDateString()}</p>
                 <span class="tracking-code">${shipment.trackingCode}</span>
                 <a href="${shipment.trackingUrl}" target="_blank" class="tracking-link">Track Shipment</a>
             </div>
@@ -542,6 +547,56 @@ function loadShipmentList() {
         `;
         shipmentList.appendChild(shipmentItem);
     });
+}
+
+function filterShipments() {
+    const searchTerm = document.getElementById('shipmentSearch').value.toLowerCase();
+    const shipmentItems = document.querySelectorAll('.shipment-item');
+    
+    shipmentItems.forEach(item => {
+        const trackingCode = item.getAttribute('data-tracking-code').toLowerCase();
+        const sender = item.getAttribute('data-sender');
+        const receiver = item.getAttribute('data-receiver');
+        const status = item.getAttribute('data-status');
+        
+        const matches = trackingCode.includes(searchTerm) || 
+                       sender.includes(searchTerm) || 
+                       receiver.includes(searchTerm) || 
+                       status.includes(searchTerm);
+        
+        item.style.display = matches ? 'block' : 'none';
+    });
+}
+
+function exportShipments() {
+    const shipments = getShipments();
+    const shipmentCodes = Object.keys(shipments);
+    
+    if (shipmentCodes.length === 0) {
+        showNotification('No shipments to export', 'error');
+        return;
+    }
+    
+    const exportData = shipmentCodes.map(code => ({
+        trackingCode: shipments[code].trackingCode,
+        sender: shipments[code].sender.name,
+        receiver: shipments[code].receiver.name,
+        status: shipments[code].currentStatus,
+        created: new Date(shipments[code].id).toLocaleDateString(),
+        trackingUrl: shipments[code].trackingUrl
+    }));
+    
+    const dataStr = JSON.stringify(exportData, null, 2);
+    const dataBlob = new Blob([dataStr], { type: 'application/json' });
+    const url = URL.createObjectURL(dataBlob);
+    
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `shipments-export-${new Date().toISOString().split('T')[0]}.json`;
+    link.click();
+    
+    URL.revokeObjectURL(url);
+    showNotification('Shipments exported successfully', 'success');
 }
 
 function showCreateShipmentModal() {
@@ -590,7 +645,27 @@ function editShipment(trackingCode) {
     currentShipmentId = trackingCode;
     trackingData = shipment;
     
-    populateFormFields();
+    // Update form fields with shipment data
+    document.getElementById('editTrackingNumber').value = shipment.trackingCode;
+    document.getElementById('editCurrentStatus').value = shipment.currentStatus;
+    document.getElementById('editLastUpdate').value = shipment.lastUpdate;
+    document.getElementById('editEstimatedDelivery').value = shipment.estimatedDelivery;
+    
+    // Package details
+    document.getElementById('editTotalWeight').value = shipment.packageDetails.weight;
+    document.getElementById('editLuggageWeight').value = shipment.packageDetails.weightBreakdown?.luggage || 'N/A';
+    document.getElementById('editBoxWeight').value = shipment.packageDetails.weightBreakdown?.mentalBox || 'N/A';
+    document.getElementById('editDocumentsWeight').value = shipment.packageDetails.weightBreakdown?.documents || 'N/A';
+    document.getElementById('editServiceType').value = shipment.packageDetails.serviceType;
+    document.getElementById('editDeparture').value = shipment.packageDetails.departure;
+    document.getElementById('editDestination').value = shipment.packageDetails.destination;
+    
+    // Contact information
+    document.getElementById('editSenderName').value = shipment.sender.name;
+    document.getElementById('editSenderAddress').value = shipment.sender.address;
+    document.getElementById('editReceiverName').value = shipment.receiver.name;
+    document.getElementById('editReceiverAddress').value = shipment.receiver.address;
+    
     initializeAdminMap();
     populateRouteList();
     populateTimelineList();
@@ -610,11 +685,36 @@ function deleteShipment(trackingCode) {
 }
 
 function copyTrackingLink(url) {
-    navigator.clipboard.writeText(url).then(() => {
+    // Try modern clipboard API first
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(url).then(() => {
+            showNotification('Tracking link copied to clipboard', 'success');
+        }).catch(() => {
+            // Fallback to older method
+            fallbackCopyTextToClipboard(url);
+        });
+    } else {
+        // Fallback for older browsers
+        fallbackCopyTextToClipboard(url);
+    }
+}
+
+function fallbackCopyTextToClipboard(text) {
+    const textArea = document.createElement('textarea');
+    textArea.value = text;
+    textArea.style.position = 'fixed';
+    textArea.style.left = '-9999px';
+    document.body.appendChild(textArea);
+    textArea.select();
+    
+    try {
+        document.execCommand('copy');
         showNotification('Tracking link copied to clipboard', 'success');
-    }).catch(() => {
+    } catch (err) {
         showNotification('Failed to copy link', 'error');
-    });
+    }
+    
+    document.body.removeChild(textArea);
 }
 
 // Populate form fields with current data
