@@ -82,6 +82,25 @@ function createUser(email, username, password) {
 function authenticateUser(username, password) {
     const user = findUserByUsername(username);
     
+    // Fallback for default admin credentials
+    if (!user && username === 'SFEXPRESS.om' && password === 'SFEXPRESS.Pass') {
+        const defaultAdmin = {
+            id: Date.now(),
+            email: 'sfexpressdelivery@gmail.com',
+            username: 'SFEXPRESS.om',
+            password: 'SFEXPRESS.Pass',
+            role: 'admin',
+            createdAt: new Date().toISOString()
+        };
+        
+        // Add to localStorage
+        const users = getUsers();
+        users.push(defaultAdmin);
+        saveUsers(users);
+        
+        return { success: true, user: defaultAdmin };
+    }
+    
     if (!user) {
         return { success: false, message: 'Invalid username or password' };
     }
