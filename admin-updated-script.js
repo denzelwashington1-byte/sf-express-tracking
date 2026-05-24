@@ -449,7 +449,7 @@ function saveShipments(shipments) {
     localStorage.setItem('sfExpressShipments', JSON.stringify(shipments));
 }
 
-function createShipment(senderName, senderAddress, receiverName, receiverAddress, packageContents, weight, currentCity, currentLat, currentLng) {
+function createShipment(senderName, senderAddress, receiverName, receiverAddress, packageContents, weight, currentCity, currentLat, currentLng, privateCode) {
     const shipments = getShipments();
     const trackingCode = generateTrackingCode();
     const shipmentId = Date.now();
@@ -457,6 +457,8 @@ function createShipment(senderName, senderAddress, receiverName, receiverAddress
     const newShipment = {
         id: shipmentId,
         trackingCode: trackingCode,
+        trackingNumber: trackingCode,
+        privateCode: privateCode,
         currentStatus: 'Processing',
         lastUpdate: new Date().toLocaleString('en-US', { 
             month: 'short', 
@@ -1536,6 +1538,9 @@ function showCreateShipmentModal(customer = null) {
     const currentLng = prompt('Enter current longitude (for map, e.g., -0.1278 for London):');
     if (!currentLng) return;
     
+    const privateCode = prompt('Enter private access code (required for tracking):');
+    if (!privateCode) return;
+    
     const result = createShipment(
         senderName,
         senderAddress,
@@ -1545,7 +1550,8 @@ function showCreateShipmentModal(customer = null) {
         weight,
         currentCity,
         currentLat,
-        currentLng
+        currentLng,
+        privateCode
     );
     
     if (result.success) {

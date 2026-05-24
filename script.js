@@ -30,6 +30,17 @@ function loadTrackingDataFromStorage() {
             console.error('Error loading tracking data from localStorage:', e);
         }
     }
+    
+    // Load shipments from admin panel
+    const adminShipments = localStorage.getItem('sfExpressShipments');
+    if (adminShipments) {
+        try {
+            const parsedShipments = JSON.parse(adminShipments);
+            Object.assign(trackingDatabase, parsedShipments);
+        } catch (e) {
+            console.error('Error loading admin shipments from localStorage:', e);
+        }
+    }
 }
 
 // Initialize the application
@@ -80,9 +91,15 @@ document.addEventListener('DOMContentLoaded', async function() {
 // Main tracking function
 function trackShipment() {
     const trackingNumber = document.getElementById('trackingNumber').value.trim();
+    const privateCode = document.getElementById('privateCode').value.trim();
     
     if (!trackingNumber) {
         showNotification('Please enter a tracking number', 'error');
+        return;
+    }
+    
+    if (!privateCode) {
+        showNotification('Please enter your private access code', 'error');
         return;
     }
 
@@ -97,6 +114,18 @@ function trackShipment() {
         const shipmentData = trackingDatabase[trackingNumber];
         
         if (shipmentData) {
+            // Verify private code
+            if (shipmentData.privateCode && shipmentData.privateCode !== privateCode) {
+                showNotification('Invalid private access code. Please try again.', 'error');
+                button.textContent = originalText;
+                button.disabled = false;
+                return;
+            }
+            
+            // If no private code is set (for backward compatibility), allow access
+            if (!shipmentData.privateCode) {
+                console.warn('Shipment has no private code set - allowing access for backward compatibility');
+            }
             displayTrackingResults(shipmentData);
             showNotification('Tracking information found!', 'success');
         } else {
