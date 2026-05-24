@@ -625,6 +625,62 @@ section h2 {
     overflow-y: auto;
 }
 
+.weight-calculator {
+    background: var(--light-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    box-shadow: var(--shadow-sm);
+}
+
+.calculator-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    align-items: end;
+}
+
+.calculator-input {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.calculator-input label {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+}
+
+.calculator-input input,
+.calculator-input select {
+    padding: 0.75rem;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    font-size: 1rem;
+    font-family: 'Inter', sans-serif;
+}
+
+.calculator-input input:focus,
+.calculator-input select:focus {
+    outline: none;
+    border-color: var(--secondary-color);
+    box-shadow: 0 0 0 3px rgba(0, 116, 217, 0.1);
+}
+
+.weight-result {
+    grid-column: 1 / -1;
+    padding: 1rem;
+    background: var(--secondary-color);
+    color: white;
+    border-radius: 8px;
+    text-align: center;
+    font-size: 1.125rem;
+    font-weight: 600;
+    margin-top: 1rem;
+}
+
 .shipment-item {
     background: var(--light-bg);
     border: 1px solid var(--border-color);
@@ -696,6 +752,16 @@ section h2 {
 .btn-copy-link {
     background: var(--warning-color);
     color: var(--primary-color);
+}
+
+.btn-hold-shipment {
+    background: #ffc107;
+    color: #333;
+}
+
+.btn-release-shipment {
+    background: #28a745;
+    color: white;
 }
 
 /* Timeline Editor */

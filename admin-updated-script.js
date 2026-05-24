@@ -447,7 +447,7 @@ function saveShipments(shipments) {
     localStorage.setItem('sfExpressShipments', JSON.stringify(shipments));
 }
 
-function createShipment(senderName, senderAddress, receiverName, receiverAddress, packageContents, weight) {
+function createShipment(senderName, senderAddress, receiverName, receiverAddress, packageContents, weight, currentCity, currentLat, currentLng) {
     const shipments = getShipments();
     const trackingCode = generateTrackingCode();
     const shipmentId = Date.now();
@@ -465,17 +465,23 @@ function createShipment(senderName, senderAddress, receiverName, receiverAddress
         }),
         estimatedDelivery: 'TBD',
         currentLocation: {
-            lat: 0,
-            lng: 0,
-            city: 'Processing',
+            lat: parseFloat(currentLat) || 0,
+            lng: parseFloat(currentLng) || 0,
+            city: currentCity || 'Processing',
             country: 'Facility'
         },
-        route: [],
+        route: [{
+            lat: parseFloat(currentLat) || 0,
+            lng: parseFloat(currentLng) || 0,
+            city: currentCity || 'Processing',
+            country: 'Facility',
+            status: 'In Transit'
+        }],
         packageDetails: {
             contents: packageContents,
             weight: weight,
             serviceType: 'International Express',
-            departure: 'Processing',
+            departure: currentCity || 'Processing',
             destination: 'Processing'
         },
         sender: {
@@ -496,7 +502,7 @@ function createShipment(senderName, senderAddress, receiverName, receiverAddress
                 hour: '2-digit', 
                 minute: '2-digit' 
             }),
-            location: 'Processing Facility',
+            location: currentCity || 'Processing Facility',
             completed: true,
             active: true
         }],
@@ -543,6 +549,10 @@ function loadShipmentList() {
                 <button class="btn-edit-shipment" onclick="editShipment('${shipment.trackingCode}')">Edit</button>
                 <button class="btn-delete-shipment" onclick="deleteShipment('${shipment.trackingCode}')">Delete</button>
                 <button class="btn-copy-link" onclick="copyTrackingLink('${shipment.trackingUrl}')">Copy Link</button>
+                ${shipment.currentStatus === 'On Hold' 
+                    ? `<button class="btn-release-shipment" onclick="releaseShipment('${shipment.trackingCode}')">Release</button>`
+                    : `<button class="btn-hold-shipment" onclick="holdShipment('${shipment.trackingCode}')">Hold</button>`
+                }
             </div>
         `;
         shipmentList.appendChild(shipmentItem);
@@ -599,6 +609,119 @@ function exportShipments() {
     showNotification('Shipments exported successfully', 'success');
 }
 
+function convertWeight() {
+    const weightValue = parseFloat(document.getElementById('weightValue').value);
+    const fromUnit = document.getElementById('weightFrom').value;
+    const toUnit = document.getElementById('weightTo').value;
+    
+    if (!weightValue || isNaN(weightValue)) {
+        showNotification('Please enter a valid weight value', 'error');
+        return;
+    }
+    
+    // Convert to kg first
+    const toKg = {
+        'kg': 1,
+        'lb': 0.453592,
+        'oz': 0.0283495,
+        'g': 0.001
+    };
+    
+    const fromKg = {
+        'kg': 1,
+        'lb': 2.20462,
+        'oz': 35.274,
+        'g': 1000
+    };
+    
+    const weightInKg = weightValue * toKg[fromUnit];
+    const result = weightInKg * fromKg[toUnit];
+    
+    document.getElementById('weightResult').textContent = 
+        `${weightValue} ${fromUnit} = ${result.toFixed(4)} ${toUnit}`;
+}
+
+function holdShipment(trackingCode) {
+    const shipments = getShipments();
+    const shipment = shipments[trackingCode];
+    
+    if (!shipment) {
+        showNotification('Shipment not found', 'error');
+        return;
+    }
+    
+    const reason = prompt('Enter reason for hold (e.g., "Waiting for clearance"):');
+    if (!reason) return;
+    
+    shipment.currentStatus = 'On Hold';
+    shipment.lastUpdate = new Date().toLocaleString('en-US', { 
+        month: 'short', 
+        day: 'numeric', 
+        year: 'numeric', 
+        hour: '2-digit', 
+        minute: '2-digit' 
+    });
+    
+    // Add timeline event
+    shipment.timeline.unshift({
+        status: 'Shipment On Hold',
+        description: reason,
+        date: new Date().toLocaleString('en-US', { 
+            month: 'short', 
+            day: 'numeric', 
+            year: 'numeric', 
+            hour: '2-digit', 
+            minute: '2-digit' 
+        }),
+        location: shipment.currentLocation.city,
+        completed: true,
+        active: true
+    });
+    
+    saveShipments(shipments);
+    loadShipmentList();
+    showNotification(`Shipment ${trackingCode} placed on hold`, 'success');
+}
+
+function releaseShipment(trackingCode) {
+    const shipments = getShipments();
+    const shipment = shipments[trackingCode];
+    
+    if (!shipment) {
+        showNotification('Shipment not found', 'error');
+        return;
+    }
+    
+    shipment.currentStatus = 'In Transit';
+    shipment.lastUpdate = new Date().toLocaleString('en-US', { 
+        month: 'short', 
+        day: 'numeric', 
+        year: 'numeric', 
+        hour: '2-digit', 
+        minute: '2-digit' 
+    });
+    
+    // Add timeline event
+    shipment.timeline.unshift({
+        status: 'Shipment Released',
+        description: 'Shipment released from hold and continuing transit',
+        date: new Date().toLocaleString('en-US', { 
+            month: 'short', 
+            day: 'numeric', 
+            year: 'numeric', 
+            hour: '2-digit', 
+            minute: '2-digit' 
+        }),
+        location: shipment.currentLocation.city,
+        completed: true,
+        active: true
+    });
+    
+    saveShipments(shipments);
+    loadShipmentList();
+    showNotification(`Shipment ${trackingCode} released from hold`, 'success');
+}
+
 function showCreateShipmentModal() {
     const senderName = prompt('Enter sender name:');
     if (!senderName) return;
@@ -618,13 +741,25 @@ function showCreateShipmentModal() {
     const weight = prompt('Enter package weight:');
     if (!weight) return;
     
+    const currentCity = prompt('Enter current city/location:');
+    if (!currentCity) return;
+    
+    const currentLat = prompt('Enter current latitude (for map):');
+    if (!currentLat) return;
+    
+    const currentLng = prompt('Enter current longitude (for map):');
+    if (!currentLng) return;
+    
     const result = createShipment(
         senderName,
         senderAddress,
         receiverName,
         receiverAddress,
         packageContents.split(',').map(item => item.trim()),
-        weight
+        weight,
+        currentCity,
+        currentLat,
+        currentLng
     );
     
     if (result.success) {

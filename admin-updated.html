@@ -84,8 +84,6 @@
                     <span class="current-user" id="currentUserInfo">Logged in as: <span id="currentUserDisplay"></span></span>
                 </div>
                 <div class="header-actions">
-                    <button id="generateJsonBtn" class="btn btn-primary">Generate Updated JSON</button>
-                    <button id="saveAllBtn" class="btn btn-secondary">Save to localStorage</button>
                     <button id="logoutBtn" class="btn btn-secondary">Logout</button>
                 </div>
             </div>
@@ -134,6 +132,37 @@
                     </div>
                     <div id="shipmentList" class="shipment-list">
                         <!-- Shipments will be loaded here -->
+                    </div>
+                </section>
+
+                <!-- Weight Calculator -->
+                <section class="weight-calculator">
+                    <h2>Weight Calculator</h2>
+                    <div class="calculator-container">
+                        <div class="calculator-input">
+                            <label>Weight Value:</label>
+                            <input type="number" id="weightValue" placeholder="Enter weight">
+                        </div>
+                        <div class="calculator-input">
+                            <label>From:</label>
+                            <select id="weightFrom">
+                                <option value="kg">Kilograms (kg)</option>
+                                <option value="lb">Pounds (lb)</option>
+                                <option value="oz">Ounces (oz)</option>
+                                <option value="g">Grams (g)</option>
+                            </select>
+                        </div>
+                        <div class="calculator-input">
+                            <label>To:</label>
+                            <select id="weightTo">
+                                <option value="kg">Kilograms (kg)</option>
+                                <option value="lb">Pounds (lb)</option>
+                                <option value="oz">Ounces (oz)</option>
+                                <option value="g">Grams (g)</option>
+                            </select>
+                        </div>
+                        <button class="btn btn-primary" onclick="convertWeight()">Convert</button>
+                        <div id="weightResult" class="weight-result"></div>
                     </div>
                 </section>
 
