@@ -681,6 +681,211 @@ section h2 {
     margin-top: 1rem;
 }
 
+.dashboard-analytics {
+    background: var(--light-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    box-shadow: var(--shadow-sm);
+}
+
+.analytics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+}
+
+.analytics-card {
+    background: white;
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    transition: all 0.2s;
+}
+
+.analytics-card:hover {
+    box-shadow: var(--shadow-md);
+    transform: translateY(-2px);
+}
+
+.analytics-icon {
+    font-size: 2.5rem;
+}
+
+.analytics-info h3 {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+    margin-bottom: 0.25rem;
+}
+
+.analytics-info p {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--primary-color);
+}
+
+.shipment-selector-container {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    padding: 1rem;
+    background: white;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+}
+
+.shipment-selector-container label {
+    font-weight: 500;
+    color: var(--text-secondary);
+    white-space: nowrap;
+}
+
+.shipment-selector-container select {
+    flex: 1;
+    padding: 0.75rem;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    font-size: 1rem;
+    font-family: 'Inter', sans-serif;
+}
+
+.shipment-selector-container select:focus {
+    outline: none;
+    border-color: var(--secondary-color);
+    box-shadow: 0 0 0 3px rgba(0, 116, 217, 0.1);
+}
+
+.btn-qr-code {
+    background: #9b59b6;
+    color: white;
+}
+
+.btn-pdf {
+    background: #e74c3c;
+    color: white;
+}
+
+/* Dark Mode */
+body.dark-mode {
+    --primary-color: #ffd700;
+    --secondary-color: #ff6b6b;
+    --text-primary: #ffffff;
+    --text-secondary: #cccccc;
+    --light-bg: #1a1a2e;
+    --border-color: #333344;
+    --danger-color: #ff6b6b;
+    --warning-color: #ffd700;
+    --success-color: #4ecdc4;
+}
+
+body.dark-mode .admin-dashboard {
+    background: #0f0f1a;
+}
+
+body.dark-mode .admin-header {
+    background: #1a1a2e;
+    border-bottom-color: #333344;
+}
+
+body.dark-mode .quick-actions,
+body.dark-mode .dashboard-analytics,
+body.dark-mode .shipment-management,
+body.dark-mode .weight-calculator,
+body.dark-mode .user-management,
+body.dark-mode .current-status,
+body.dark-mode .location-editor,
+body.dark-mode .timeline-editor,
+body.dark-mode .package-editor,
+body.dark-mode .contact-editor {
+    background: #1a1a2e;
+    border-color: #333344;
+}
+
+body.dark-mode .analytics-card,
+body.dark-mode .shipment-item {
+    background: #252538;
+    border-color: #333344;
+}
+
+body.dark-mode .shipment-selector-container {
+    background: #252538;
+    border-color: #333344;
+}
+
+body.dark-mode input,
+body.dark-mode textarea,
+body.dark-mode select {
+    background: #252538;
+    border-color: #333344;
+    color: #ffffff;
+}
+
+body.dark-mode .btn {
+    background: #333344;
+    color: #ffffff;
+}
+
+body.dark-mode .btn-primary {
+    background: var(--secondary-color);
+}
+
+body.dark-mode .btn-secondary {
+    background: #444455;
+}
+
+.customer-database {
+    background: var(--light-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    box-shadow: var(--shadow-sm);
+}
+
+.customer-controls {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.customer-list {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.customer-item {
+    background: white;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+}
+
+.customer-info h4 {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: var(--primary-color);
+    margin-bottom: 0.5rem;
+}
+
+.customer-info p {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    margin-bottom: 0.25rem;
+}
+
+.customer-actions {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 1rem;
+}
+
 .shipment-item {
     background: var(--light-bg);
     border: 1px solid var(--border-color);

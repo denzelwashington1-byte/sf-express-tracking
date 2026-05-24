@@ -119,6 +119,41 @@
                     </div>
                 </section>
 
+                <!-- Dashboard Analytics -->
+                <section class="dashboard-analytics">
+                    <h2>Dashboard Analytics</h2>
+                    <div class="analytics-grid">
+                        <div class="analytics-card">
+                            <div class="analytics-icon">📦</div>
+                            <div class="analytics-info">
+                                <h3>Total Shipments</h3>
+                                <p id="totalShipments">0</p>
+                            </div>
+                        </div>
+                        <div class="analytics-card">
+                            <div class="analytics-icon">🚚</div>
+                            <div class="analytics-info">
+                                <h3>In Transit</h3>
+                                <p id="inTransitShipments">0</p>
+                            </div>
+                        </div>
+                        <div class="analytics-card">
+                            <div class="analytics-icon">✅</div>
+                            <div class="analytics-info">
+                                <h3>Delivered</h3>
+                                <p id="deliveredShipments">0</p>
+                            </div>
+                        </div>
+                        <div class="analytics-card">
+                            <div class="analytics-icon">⏸️</div>
+                            <div class="analytics-info">
+                                <h3>On Hold</h3>
+                                <p id="onHoldShipments">0</p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
                 <!-- Shipment Management -->
                 <section class="shipment-management">
                     <h2>Shipment Management</h2>
@@ -178,6 +213,18 @@
                     </div>
                 </section>
 
+                <!-- Customer Database -->
+                <section class="customer-database">
+                    <h2>Customer Database</h2>
+                    <div class="customer-controls">
+                        <button class="btn btn-primary" onclick="showAddCustomerModal()">Add Customer</button>
+                        <button class="btn btn-secondary" onclick="loadCustomerList()">Refresh Customers</button>
+                    </div>
+                    <div id="customerList" class="customer-list">
+                        <!-- Customers will be loaded here -->
+                    </div>
+                </section>
+
                 <!-- Current Status -->
                 <section class="current-status">
                     <h2>Current Tracking Status</h2>
@@ -226,6 +273,13 @@
                 <!-- Timeline Editor -->
                 <section class="timeline-editor">
                     <h2>Timeline Management</h2>
+                    <div class="shipment-selector-container">
+                        <label>Select Shipment to Edit:</label>
+                        <select id="timelineShipmentSelector" onchange="selectShipmentForEditor('timeline')">
+                            <option value="">Select a shipment...</option>
+                        </select>
+                        <button class="btn btn-primary" onclick="saveEditorChanges('timeline')">Save Changes</button>
+                    </div>
                     <div class="timeline-controls">
                         <button class="btn btn-primary" onclick="addTimelineEvent()">Add Event</button>
                         <button class="btn btn-secondary" onclick="clearTimeline()">Clear Timeline</button>
@@ -238,6 +292,13 @@
                 <!-- Package Details Editor -->
                 <section class="package-editor">
                     <h2>Package Information</h2>
+                    <div class="shipment-selector-container">
+                        <label>Select Shipment to Edit:</label>
+                        <select id="packageShipmentSelector" onchange="selectShipmentForEditor('package')">
+                            <option value="">Select a shipment...</option>
+                        </select>
+                        <button class="btn btn-primary" onclick="saveEditorChanges('package')">Save Changes</button>
+                    </div>
                     <div class="package-grid">
                         <div class="editor-section">
                             <h3>Package Contents</h3>
@@ -290,6 +351,13 @@
                 <!-- Contact Information Editor -->
                 <section class="contact-editor">
                     <h2>Contact Information</h2>
+                    <div class="shipment-selector-container">
+                        <label>Select Shipment to Edit:</label>
+                        <select id="contactShipmentSelector" onchange="selectShipmentForEditor('contact')">
+                            <option value="">Select a shipment...</option>
+                        </select>
+                        <button class="btn btn-primary" onclick="saveEditorChanges('contact')">Save Changes</button>
+                    </div>
                     <div class="contact-grid">
                         <div class="editor-section">
                             <h3>Sender Information</h3>

@@ -11,6 +11,7 @@ document.addEventListener('DOMContentLoaded', function() {
     loadTrackingData();
     setupEventListeners();
     loadShipmentList();
+    loadCustomerList();
 });
 
 // User Management System
@@ -524,6 +525,7 @@ function loadShipmentList() {
     
     if (shipmentCodes.length === 0) {
         shipmentList.innerHTML = '<p style="text-align: center; color: var(--text-secondary);">No shipments found</p>';
+        updateDashboardAnalytics();
         return;
     }
     
@@ -549,6 +551,8 @@ function loadShipmentList() {
                 <button class="btn-edit-shipment" onclick="editShipment('${shipment.trackingCode}')">Edit</button>
                 <button class="btn-delete-shipment" onclick="deleteShipment('${shipment.trackingCode}')">Delete</button>
                 <button class="btn-copy-link" onclick="copyTrackingLink('${shipment.trackingUrl}')">Copy Link</button>
+                <button class="btn-qr-code" onclick="generateQRCode('${shipment.trackingCode}')">QR Code</button>
+                <button class="btn-pdf" onclick="exportToPDF('${shipment.trackingCode}')">PDF</button>
                 ${shipment.currentStatus === 'On Hold' 
                     ? `<button class="btn-release-shipment" onclick="releaseShipment('${shipment.trackingCode}')">Release</button>`
                     : `<button class="btn-hold-shipment" onclick="holdShipment('${shipment.trackingCode}')">Hold</button>`
@@ -557,6 +561,122 @@ function loadShipmentList() {
         `;
         shipmentList.appendChild(shipmentItem);
     });
+    
+    updateDashboardAnalytics();
+    populateShipmentSelector();
+}
+
+function updateDashboardAnalytics() {
+    const shipments = getShipments();
+    const shipmentCodes = Object.keys(shipments);
+    
+    let total = shipmentCodes.length;
+    let inTransit = 0;
+    let delivered = 0;
+    let onHold = 0;
+    
+    shipmentCodes.forEach(code => {
+        const status = shipments[code].currentStatus.toLowerCase();
+        if (status === 'in transit' || status === 'processing') {
+            inTransit++;
+        } else if (status === 'delivered') {
+            delivered++;
+        } else if (status === 'on hold') {
+            onHold++;
+        }
+    });
+    
+    document.getElementById('totalShipments').textContent = total;
+    document.getElementById('inTransitShipments').textContent = inTransit;
+    document.getElementById('deliveredShipments').textContent = delivered;
+    document.getElementById('onHoldShipments').textContent = onHold;
+}
+
+function populateShipmentSelector() {
+    const shipments = getShipments();
+    const shipmentCodes = Object.keys(shipments);
+    
+    // Populate selector for Timeline, Package, and Contact editors
+    const selectors = ['timelineShipmentSelector', 'packageShipmentSelector', 'contactShipmentSelector'];
+    
+    selectors.forEach(selectorId => {
+        const selector = document.getElementById(selectorId);
+        if (!selector) return;
+        
+        selector.innerHTML = '<option value="">Select a shipment...</option>';
+        shipmentCodes.forEach(code => {
+            const shipment = shipments[code];
+            const option = document.createElement('option');
+            option.value = code;
+            option.textContent = `${code} - ${shipment.sender.name} to ${shipment.receiver.name}`;
+            selector.appendChild(option);
+        });
+    });
+}
+
+function selectShipmentForEditor(editorType) {
+    const selectorId = `${editorType}ShipmentSelector`;
+    const selector = document.getElementById(selectorId);
+    const trackingCode = selector.value;
+    
+    if (!trackingCode) {
+        showNotification('Please select a shipment', 'error');
+        return;
+    }
+    
+    const shipments = getShipments();
+    const shipment = shipments[trackingCode];
+    
+    if (!shipment) {
+        showNotification('Shipment not found', 'error');
+        return;
+    }
+    
+    currentShipmentId = trackingCode;
+    trackingData = shipment;
+    
+    populateFormFields();
+    initializeAdminMap();
+    populateRouteList();
+    populateTimelineList();
+    populatePackageContents();
+    
+    showNotification(`Editing shipment: ${trackingCode}`, 'success');
+}
+
+function saveEditorChanges(editorType) {
+    if (!currentShipmentId) {
+        showNotification('No shipment selected', 'error');
+        return;
+    }
+    
+    const shipments = getShipments();
+    const shipment = shipments[currentShipmentId];
+    
+    if (!shipment) {
+        showNotification('Shipment not found', 'error');
+        return;
+    }
+    
+    // Update shipment with current form data
+    shipment.trackingNumber = document.getElementById('editTrackingNumber').value;
+    shipment.currentStatus = document.getElementById('editCurrentStatus').value;
+    shipment.lastUpdate = document.getElementById('editLastUpdate').value;
+    shipment.estimatedDelivery = document.getElementById('editEstimatedDelivery').value;
+    
+    shipment.packageDetails.weight = document.getElementById('editTotalWeight').value;
+    shipment.packageDetails.serviceType = document.getElementById('editServiceType').value;
+    shipment.packageDetails.departure = document.getElementById('editDeparture').value;
+    shipment.packageDetails.destination = document.getElementById('editDestination').value;
+    
+    shipment.sender.name = document.getElementById('editSenderName').value;
+    shipment.sender.address = document.getElementById('editSenderAddress').value;
+    shipment.receiver.name = document.getElementById('editReceiverName').value;
+    shipment.receiver.address = document.getElementById('editReceiverAddress').value;
+    
+    saveShipments(shipments);
+    showNotification('Changes saved successfully', 'success');
+    loadShipmentList();
 }
 
 function filterShipments() {
@@ -607,6 +727,67 @@ function exportShipments() {
     
     URL.revokeObjectURL(url);
     showNotification('Shipments exported successfully', 'success');
+}
+
+function exportToPDF(trackingCode) {
+    const shipments = getShipments();
+    const shipment = shipments[trackingCode];
+    
+    if (!shipment) {
+        showNotification('Shipment not found', 'error');
+        return;
+    }
+    
+    // Create a printable HTML content
+    const printContent = `
+        <html>
+        <head>
+            <title>Shipment Report - ${shipment.trackingCode}</title>
+            <style>
+                body { font-family: Arial, sans-serif; padding: 20px; }
+                h1 { color: #0074d9; }
+                .section { margin-bottom: 20px; }
+                .label { font-weight: bold; }
+            </style>
+        </head>
+        <body>
+            <h1>Shipment Report</h1>
+            <div class="section">
+                <p><span class="label">Tracking Code:</span> ${shipment.trackingCode}</p>
+                <p><span class="label">Status:</span> ${shipment.currentStatus}</p>
+                <p><span class="label">Last Update:</span> ${shipment.lastUpdate}</p>
+                <p><span class="label">Estimated Delivery:</span> ${shipment.estimatedDelivery}</p>
+            </div>
+            <div class="section">
+                <h2>Sender Information</h2>
+                <p><span class="label">Name:</span> ${shipment.sender.name}</p>
+                <p><span class="label">Address:</span> ${shipment.sender.address}</p>
+            </div>
+            <div class="section">
+                <h2>Receiver Information</h2>
+                <p><span class="label">Name:</span> ${shipment.receiver.name}</p>
+                <p><span class="label">Address:</span> ${shipment.receiver.address}</p>
+            </div>
+            <div class="section">
+                <h2>Package Details</h2>
+                <p><span class="label">Weight:</span> ${shipment.packageDetails.weight}</p>
+                <p><span class="label">Service Type:</span> ${shipment.packageDetails.serviceType}</p>
+                <p><span class="label">Contents:</span> ${Array.isArray(shipment.packageDetails.contents) ? shipment.packageDetails.contents.join(', ') : shipment.packageDetails.contents}</p>
+            </div>
+            <div class="section">
+                <h2>Tracking URL</h2>
+                <p><a href="${shipment.trackingUrl}">${shipment.trackingUrl}</a></p>
+            </div>
+        </body>
+        </html>
+    `;
+    
+    const printWindow = window.open('', '_blank');
+    printWindow.document.write(printContent);
+    printWindow.document.close();
+    printWindow.print();
+    
+    showNotification('PDF report generated', 'success');
 }
 
 function convertWeight() {
@@ -722,11 +903,268 @@ function releaseShipment(trackingCode) {
     showNotification(`Shipment ${trackingCode} released from hold`, 'success');
 }
 
-function showCreateShipmentModal() {
-    const senderName = prompt('Enter sender name:');
+function generateQRCode(trackingCode) {
+    const shipments = getShipments();
+    const shipment = shipments[trackingCode];
+    
+    if (!shipment) {
+        showNotification('Shipment not found', 'error');
+        return;
+    }
+    
+    // Use a QR code API to generate the QR code
+    const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(shipment.trackingUrl)}`;
+    
+    // Open in new window
+    window.open(qrCodeUrl, '_blank');
+    showNotification('QR Code generated', 'success');
+}
+
+function showBulkOperations() {
+    const action = prompt('Select bulk operation:\n1. Delete All\n2. Hold All\n3. Release All\n4. Export All\n\nEnter number (1-4):');
+    
+    if (!action) return;
+    
+    const shipments = getShipments();
+    const shipmentCodes = Object.keys(shipments);
+    
+    if (shipmentCodes.length === 0) {
+        showNotification('No shipments to operate on', 'error');
+        return;
+    }
+    
+    switch(action) {
+        case '1':
+            if (confirm(`Are you sure you want to delete all ${shipmentCodes.length} shipments?`)) {
+                localStorage.removeItem('sfExpressShipments');
+                showNotification('All shipments deleted', 'success');
+                loadShipmentList();
+            }
+            break;
+        case '2':
+            shipmentCodes.forEach(code => {
+                shipments[code].currentStatus = 'On Hold';
+                shipments[code].lastUpdate = new Date().toLocaleString('en-US', { 
+                    month: 'short', 
+                    day: 'numeric', 
+                    year: 'numeric', 
+                    hour: '2-digit', 
+                    minute: '2-digit' 
+                });
+            });
+            saveShipments(shipments);
+            showNotification('All shipments placed on hold', 'success');
+            loadShipmentList();
+            break;
+        case '3':
+            shipmentCodes.forEach(code => {
+                shipments[code].currentStatus = 'In Transit';
+                shipments[code].lastUpdate = new Date().toLocaleString('en-US', { 
+                    month: 'short', 
+                    day: 'numeric', 
+                    year: 'numeric', 
+                    hour: '2-digit', 
+                    minute: '2-digit' 
+                });
+            });
+            saveShipments(shipments);
+            showNotification('All shipments released from hold', 'success');
+            loadShipmentList();
+            break;
+        case '4':
+            exportShipments();
+            break;
+        default:
+            showNotification('Invalid selection', 'error');
+    }
+}
+
+function showTemplateModal() {
+    const templates = JSON.parse(localStorage.getItem('sfExpressTemplates')) || [];
+    
+    if (templates.length === 0) {
+        showNotification('No templates saved. Create a shipment to save as template.', 'info');
+        return;
+    }
+    
+    let templateList = 'Saved Templates:\n';
+    templates.forEach((template, index) => {
+        templateList += `${index + 1}. ${template.name} - ${template.senderName} to ${template.receiverName}\n`;
+    });
+    
+    const selection = prompt(templateList + '\nEnter template number to use, or "cancel" to exit:');
+    
+    if (!selection || selection.toLowerCase() === 'cancel') return;
+    
+    const templateIndex = parseInt(selection) - 1;
+    
+    if (templateIndex < 0 || templateIndex >= templates.length) {
+        showNotification('Invalid template selection', 'error');
+        return;
+    }
+    
+    const template = templates[templateIndex];
+    
+    // Create shipment from template
+    const result = createShipment(
+        template.senderName,
+        template.senderAddress,
+        template.receiverName,
+        template.receiverAddress,
+        template.packageContents,
+        template.weight,
+        template.currentCity,
+        template.currentLat,
+        template.currentLng
+    );
+    
+    if (result.success) {
+        showNotification(`Shipment created from template! Tracking Code: ${result.shipment.trackingCode}`, 'success');
+        loadShipmentList();
+    }
+}
+
+function saveAsTemplate(trackingCode) {
+    const shipments = getShipments();
+    const shipment = shipments[trackingCode];
+    
+    if (!shipment) {
+        showNotification('Shipment not found', 'error');
+        return;
+    }
+    
+    const templateName = prompt('Enter template name:');
+    if (!templateName) return;
+    
+    const template = {
+        name: templateName,
+        senderName: shipment.sender.name,
+        senderAddress: shipment.sender.address,
+        receiverName: shipment.receiver.name,
+        receiverAddress: shipment.receiver.address,
+        packageContents: shipment.packageDetails.contents,
+        weight: shipment.packageDetails.weight,
+        currentCity: shipment.currentLocation.city,
+        currentLat: shipment.currentLocation.lat,
+        currentLng: shipment.currentLocation.lng
+    };
+    
+    const templates = JSON.parse(localStorage.getItem('sfExpressTemplates')) || [];
+    templates.push(template);
+    localStorage.setItem('sfExpressTemplates', JSON.stringify(templates));
+    
+    showNotification('Template saved successfully', 'success');
+}
+
+function toggleDarkMode() {
+    document.body.classList.toggle('dark-mode');
+    const isDarkMode = document.body.classList.contains('dark-mode');
+    localStorage.setItem('darkMode', isDarkMode);
+    showNotification(isDarkMode ? 'Dark mode enabled' : 'Dark mode disabled', 'info');
+}
+
+// Initialize dark mode from localStorage
+if (localStorage.getItem('darkMode') === 'true') {
+    document.body.classList.add('dark-mode');
+}
+
+// Customer Database Functions
+function getCustomers() {
+    return JSON.parse(localStorage.getItem('sfExpressCustomers')) || [];
+}
+
+function saveCustomers(customers) {
+    localStorage.setItem('sfExpressCustomers', JSON.stringify(customers));
+}
+
+function showAddCustomerModal() {
+    const name = prompt('Enter customer name:');
+    if (!name) return;
+    
+    const email = prompt('Enter customer email:');
+    if (!email) return;
+    
+    const phone = prompt('Enter customer phone:');
+    if (!phone) return;
+    
+    const address = prompt('Enter customer address:');
+    if (!address) return;
+    
+    const customers = getCustomers();
+    const newCustomer = {
+        id: Date.now(),
+        name: name,
+        email: email,
+        phone: phone,
+        address: address,
+        createdAt: new Date().toISOString()
+    };
+    
+    customers.push(newCustomer);
+    saveCustomers(customers);
+    
+    showNotification('Customer added successfully', 'success');
+    loadCustomerList();
+}
+
+function loadCustomerList() {
+    const customers = getCustomers();
+    const customerList = document.getElementById('customerList');
+    customerList.innerHTML = '';
+    
+    if (customers.length === 0) {
+        customerList.innerHTML = '<p style="text-align: center; color: var(--text-secondary);">No customers found</p>';
+        return;
+    }
+    
+    customers.forEach(customer => {
+        const customerItem = document.createElement('div');
+        customerItem.className = 'customer-item';
+        customerItem.innerHTML = `
+            <div class="customer-info">
+                <h4>${customer.name}</h4>
+                <p>Email: ${customer.email}</p>
+                <p>Phone: ${customer.phone}</p>
+                <p>Address: ${customer.address}</p>
+                <p>Added: ${new Date(customer.createdAt).toLocaleDateString()}</p>
+            </div>
+            <div class="customer-actions">
+                <button class="btn-edit-shipment" onclick="useCustomerForShipment('${customer.id}')">Use for Shipment</button>
+                <button class="btn-delete-shipment" onclick="deleteCustomer('${customer.id}')">Delete</button>
+            </div>
+        `;
+        customerList.appendChild(customerItem);
+    });
+}
+
+function deleteCustomer(customerId) {
+    if (confirm('Are you sure you want to delete this customer?')) {
+        const customers = getCustomers();
+        const filteredCustomers = customers.filter(customer => customer.id != customerId);
+        saveCustomers(filteredCustomers);
+        showNotification('Customer deleted', 'success');
+        loadCustomerList();
+    }
+}
+
+function useCustomerForShipment(customerId) {
+    const customers = getCustomers();
+    const customer = customers.find(c => c.id == customerId);
+    
+    if (!customer) {
+        showNotification('Customer not found', 'error');
+        return;
+    }
+    
+    // Pre-fill shipment creation with customer data
+    showCreateShipmentModal(customer);
+}
+
+function showCreateShipmentModal(customer = null) {
+    const senderName = prompt('Enter sender name:', customer ? customer.name : '');
     if (!senderName) return;
     
-    const senderAddress = prompt('Enter sender address:');
+    const senderAddress = prompt('Enter sender address:', customer ? customer.address : '');
     if (!senderAddress) return;
     
     const receiverName = prompt('Enter receiver name:');
