@@ -347,7 +347,8 @@ body {
 
 /* Sections */
 section {
-    background: var(--card-bg);
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(10px);
     border-radius: var(--border-radius);
     padding: 2rem;
     margin-bottom: 2rem;
@@ -820,7 +821,7 @@ body.dark-mode {
 }
 
 body.dark-mode .admin-dashboard {
-    background: #0f0f1a;
+    background: url('dashboard-bg.png') center/cover no-repeat fixed;
 }
 
 body.dark-mode .admin-header {
