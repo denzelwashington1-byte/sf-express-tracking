@@ -553,7 +553,10 @@ function loadShipmentList() {
                 <button class="btn-copy-link" onclick="copyTrackingLink('${shipment.trackingUrl}')">Copy Link</button>
                 <button class="btn-qr-code" onclick="generateQRCode('${shipment.trackingCode}')">QR Code</button>
                 <button class="btn-pdf" onclick="exportToPDF('${shipment.trackingCode}')">PDF</button>
-                ${shipment.currentStatus === 'On Hold' 
+                <button class="btn-email" onclick="sendEmailNotification('${shipment.trackingCode}')">Email</button>
+                <button class="btn-sms" onclick="sendSMSNotification('${shipment.trackingCode}')">SMS</button>
+                <button class="btn-confirm-delivery" onclick="confirmDelivery('${shipment.trackingCode}')">Confirm Delivery</button>
+                ${shipment.currentStatus === 'On Hold'
                     ? `<button class="btn-release-shipment" onclick="releaseShipment('${shipment.trackingCode}')">Release</button>`
                     : `<button class="btn-hold-shipment" onclick="holdShipment('${shipment.trackingCode}')">Hold</button>`
                 }
@@ -788,6 +791,114 @@ function exportToPDF(trackingCode) {
     printWindow.print();
     
     showNotification('PDF report generated', 'success');
+}
+
+function sendEmailNotification(trackingCode) {
+    const shipments = getShipments();
+    const shipment = shipments[trackingCode];
+    
+    if (!shipment) {
+        showNotification('Shipment not found', 'error');
+        return;
+    }
+    
+    const subject = encodeURIComponent(`Shipment Update: ${shipment.trackingCode} - ${shipment.currentStatus}`);
+    const body = encodeURIComponent(
+        `Dear Customer,\n\n` +
+        `Your shipment ${shipment.trackingCode} status has been updated.\n\n` +
+        `Current Status: ${shipment.currentStatus}\n` +
+        `Last Update: ${shipment.lastUpdate}\n` +
+        `Estimated Delivery: ${shipment.estimatedDelivery}\n\n` +
+        `Track your shipment: ${shipment.trackingUrl}\n\n` +
+        `Thank you for choosing SF Express International.\n\n` +
+        `SF Express International Delivery`
+    );
+    
+    window.location.href = `mailto:?subject=${subject}&body=${body}`;
+    showNotification('Email client opened with tracking update', 'success');
+}
+
+function sendSMSNotification(trackingCode) {
+    const shipments = getShipments();
+    const shipment = shipments[trackingCode];
+    
+    if (!shipment) {
+        showNotification('Shipment not found', 'error');
+        return;
+    }
+    
+    const message = encodeURIComponent(
+        `SF Express: Shipment ${shipment.trackingCode} is ${shipment.currentStatus}. Track: ${shipment.trackingUrl}`
+    );
+    
+    window.open(`sms:?body=${message}`, '_blank');
+    showNotification('SMS app opened with tracking update', 'success');
+}
+
+function confirmDelivery(trackingCode) {
+    const shipments = getShipments();
+    const shipment = shipments[trackingCode];
+    
+    if (!shipment) {
+        showNotification('Shipment not found', 'error');
+        return;
+    }
+    
+    const confirmationMethod = prompt('Select confirmation method:\n1. Digital Signature\n2. Photo Proof\n3. No Proof Required\n\nEnter number (1-3):');
+    
+    if (!confirmationMethod) return;
+    
+    let confirmationDetails = '';
+    
+    switch(confirmationMethod) {
+        case '1':
+            const signerName = prompt('Enter signer name:');
+            if (!signerName) return;
+            confirmationDetails = `Digital signature by: ${signerName}`;
+            break;
+        case '2':
+            const photoNote = prompt('Enter photo proof note:');
+            if (!photoNote) return;
+            confirmationDetails = `Photo proof: ${photoNote}`;
+            break;
+        case '3':
+            confirmationDetails = 'No proof required - delivered without confirmation';
+            break;
+        default:
+            showNotification('Invalid selection', 'error');
+            return;
+    }
+    
+    // Update shipment status to Delivered
+    shipment.currentStatus = 'Delivered';
+    shipment.lastUpdate = new Date().toLocaleString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+    
+    // Add delivery confirmation to timeline
+    shipment.timeline.unshift({
+        status: 'Delivered',
+        description: `Package delivered successfully. ${confirmationDetails}`,
+        date: new Date().toLocaleString('en-US', {
+            month: 'short',
+            day: 'numeric',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        }),
+        location: shipment.currentLocation.city,
+        completed: true,
+        active: true,
+        confirmation: confirmationDetails
+    });
+    
+    saveShipments(shipments);
+    loadShipmentList();
+    showNotification(`Shipment ${trackingCode} confirmed as delivered`, 'success');
 }
 
 function convertWeight() {
@@ -1066,6 +1177,139 @@ function toggleDarkMode() {
 // Initialize dark mode from localStorage
 if (localStorage.getItem('darkMode') === 'true') {
     document.body.classList.add('dark-mode');
+}
+
+// Language Support
+const translations = {
+    en: {
+        quickActions: 'Quick Actions',
+        createShipment: 'Create Shipment',
+        shipmentManagement: 'Shipment Management',
+        dashboardAnalytics: 'Dashboard Analytics',
+        totalShipments: 'Total Shipments',
+        inTransit: 'In Transit',
+        delivered: 'Delivered',
+        onHold: 'On Hold',
+        userManagement: 'User Management',
+        customerDatabase: 'Customer Database',
+        weightCalculator: 'Weight Calculator',
+        timelineManagement: 'Timeline Management',
+        packageInformation: 'Package Information',
+        contactInformation: 'Contact Information'
+    },
+    es: {
+        quickActions: 'Acciones Rápidas',
+        createShipment: 'Crear Envío',
+        shipmentManagement: 'Gestión de Envíos',
+        dashboardAnalytics: 'Analítica del Panel',
+        totalShipments: 'Total de Envíos',
+        inTransit: 'En Tránsito',
+        delivered: 'Entregado',
+        onHold: 'En Espera',
+        userManagement: 'Gestión de Usuarios',
+        customerDatabase: 'Base de Datos de Clientes',
+        weightCalculator: 'Calculadora de Peso',
+        timelineManagement: 'Gestión de Cronología',
+        packageInformation: 'Información del Paquete',
+        contactInformation: 'Información de Contacto'
+    },
+    fr: {
+        quickActions: 'Actions Rapides',
+        createShipment: 'Créer Expédition',
+        shipmentManagement: 'Gestion des Expéditions',
+        dashboardAnalytics: 'Analytique du Tableau de Bord',
+        totalShipments: 'Total des Expéditions',
+        inTransit: 'En Transit',
+        delivered: 'Livré',
+        onHold: 'En Attente',
+        userManagement: 'Gestion des Utilisateurs',
+        customerDatabase: 'Base de Données Clients',
+        weightCalculator: 'Calculateur de Poids',
+        timelineManagement: 'Gestion de la Chronologie',
+        packageInformation: 'Informations sur le Colis',
+        contactInformation: 'Informations de Contact'
+    },
+    de: {
+        quickActions: 'Schnellaktionen',
+        createShipment: 'Sendung Erstellen',
+        shipmentManagement: 'Sendungsverwaltung',
+        dashboardAnalytics: 'Dashboard-Analysen',
+        totalShipments: 'Gesamtsendungen',
+        inTransit: 'Unterwegs',
+        delivered: 'Zugestellt',
+        onHold: 'Gehalten',
+        userManagement: 'Benutzerverwaltung',
+        customerDatabase: 'Kundendatenbank',
+        weightCalculator: 'Gewichtsrechner',
+        timelineManagement: 'Zeitstrahl-Verwaltung',
+        packageInformation: 'Paketinformationen',
+        contactInformation: 'Kontaktinformationen'
+    },
+    zh: {
+        quickActions: '快速操作',
+        createShipment: '创建货运',
+        shipmentManagement: '货运管理',
+        dashboardAnalytics: '仪表板分析',
+        totalShipments: '总货运量',
+        inTransit: '运输中',
+        delivered: '已送达',
+        onHold: '暂停',
+        userManagement: '用户管理',
+        customerDatabase: '客户数据库',
+        weightCalculator: '重量计算器',
+        timelineManagement: '时间线管理',
+        packageInformation: '包裹信息',
+        contactInformation: '联系信息'
+    },
+    ar: {
+        quickActions: 'إجراءات سريعة',
+        createShipment: 'إنشاء شحنة',
+        shipmentManagement: 'إدارة الشحنات',
+        dashboardAnalytics: 'تحليلات لوحة التحكم',
+        totalShipments: 'إجمالي الشحنات',
+        inTransit: 'قيد النقل',
+        delivered: 'تم التسليم',
+        onHold: 'معلقة',
+        userManagement: 'إدارة المستخدمين',
+        customerDatabase: 'قاعدة بيانات العملاء',
+        weightCalculator: 'حاسبة الوزن',
+        timelineManagement: 'إدارة الجدول الزمني',
+        packageInformation: 'معلومات الحزمة',
+        contactInformation: 'معلومات الاتصال'
+    }
+};
+
+function changeLanguage() {
+    const language = document.getElementById('languageSelect').value;
+    localStorage.setItem('selectedLanguage', language);
+    applyLanguage(language);
+    showNotification(`Language changed to ${language.toUpperCase()}`, 'success');
+}
+
+function applyLanguage(language) {
+    const lang = translations[language] || translations.en;
+    
+    // Update section headings
+    const headings = document.querySelectorAll('section h2');
+    headings.forEach(heading => {
+        const text = heading.textContent;
+        if (text.includes('Quick Actions')) heading.textContent = lang.quickActions;
+        if (text.includes('Shipment Management')) heading.textContent = lang.shipmentManagement;
+        if (text.includes('Dashboard Analytics')) heading.textContent = lang.dashboardAnalytics;
+        if (text.includes('User Management')) heading.textContent = lang.userManagement;
+        if (text.includes('Customer Database')) heading.textContent = lang.customerDatabase;
+        if (text.includes('Weight Calculator')) heading.textContent = lang.weightCalculator;
+        if (text.includes('Timeline Management')) heading.textContent = lang.timelineManagement;
+        if (text.includes('Package Information')) heading.textContent = lang.packageInformation;
+        if (text.includes('Contact Information')) heading.textContent = lang.contactInformation;
+    });
+}
+
+// Initialize language from localStorage
+const savedLanguage = localStorage.getItem('selectedLanguage');
+if (savedLanguage) {
+    document.getElementById('languageSelect').value = savedLanguage;
+    applyLanguage(savedLanguage);
 }
 
 // Customer Database Functions
