@@ -834,8 +834,8 @@ function filterShipments() {
     });
 }
 
-function exportShipments() {
-    const shipments = getShipments();
+async function exportShipments() {
+    const shipments = await getShipments();
     const shipmentCodes = Object.keys(shipments);
     
     if (shipmentCodes.length === 0) {
@@ -865,8 +865,8 @@ function exportShipments() {
     showNotification('Shipments exported successfully', 'success');
 }
 
-function exportToPDF(trackingCode) {
-    const shipments = getShipments();
+async function exportToPDF(trackingCode) {
+    const shipments = await getShipments();
     const shipment = shipments[trackingCode];
     
     if (!shipment) {
@@ -926,8 +926,8 @@ function exportToPDF(trackingCode) {
     showNotification('PDF report generated', 'success');
 }
 
-function sendEmailNotification(trackingCode) {
-    const shipments = getShipments();
+async function sendEmailNotification(trackingCode) {
+    const shipments = await getShipments();
     const shipment = shipments[trackingCode];
     
     if (!shipment) {
@@ -951,8 +951,8 @@ function sendEmailNotification(trackingCode) {
     showNotification('Email client opened with tracking update', 'success');
 }
 
-function sendSMSNotification(trackingCode) {
-    const shipments = getShipments();
+async function sendSMSNotification(trackingCode) {
+    const shipments = await getShipments();
     const shipment = shipments[trackingCode];
     
     if (!shipment) {
@@ -968,8 +968,8 @@ function sendSMSNotification(trackingCode) {
     showNotification('SMS app opened with tracking update', 'success');
 }
 
-function confirmDelivery(trackingCode) {
-    const shipments = getShipments();
+async function confirmDelivery(trackingCode) {
+    const shipments = await getShipments();
     const shipment = shipments[trackingCode];
     
     if (!shipment) {
@@ -1066,8 +1066,8 @@ function convertWeight() {
         `${weightValue} ${fromUnit} = ${result.toFixed(4)} ${toUnit}`;
 }
 
-function holdShipment(trackingCode) {
-    const shipments = getShipments();
+async function holdShipment(trackingCode) {
+    const shipments = await getShipments();
     const shipment = shipments[trackingCode];
     
     if (!shipment) {
@@ -1108,8 +1108,8 @@ function holdShipment(trackingCode) {
     showNotification(`Shipment ${trackingCode} placed on hold`, 'success');
 }
 
-function releaseShipment(trackingCode) {
-    const shipments = getShipments();
+async function releaseShipment(trackingCode) {
+    const shipments = await getShipments();
     const shipment = shipments[trackingCode];
     
     if (!shipment) {
@@ -1147,8 +1147,8 @@ function releaseShipment(trackingCode) {
     showNotification(`Shipment ${trackingCode} released from hold`, 'success');
 }
 
-function generateQRCode(trackingCode) {
-    const shipments = getShipments();
+async function generateQRCode(trackingCode) {
+    const shipments = await getShipments();
     const shipment = shipments[trackingCode];
     
     if (!shipment) {
@@ -1164,12 +1164,12 @@ function generateQRCode(trackingCode) {
     showNotification('QR Code generated', 'success');
 }
 
-function showBulkOperations() {
+async function showBulkOperations() {
     const action = prompt('Select bulk operation:\n1. Delete All\n2. Hold All\n3. Release All\n4. Export All\n\nEnter number (1-4):');
     
     if (!action) return;
     
-    const shipments = getShipments();
+    const shipments = await getShipments();
     const shipmentCodes = Object.keys(shipments);
     
     if (shipmentCodes.length === 0) {
@@ -1268,8 +1268,8 @@ function showTemplateModal() {
     }
 }
 
-function saveAsTemplate(trackingCode) {
-    const shipments = getShipments();
+async function saveAsTemplate(trackingCode) {
+    const shipments = await getShipments();
     const shipment = shipments[trackingCode];
     
     if (!shipment) {
@@ -1605,8 +1605,8 @@ function showCreateShipmentModal(customer = null) {
     }
 }
 
-function editShipment(trackingCode) {
-    const shipments = getShipments();
+async function editShipment(trackingCode) {
+    const shipments = await getShipments();
     const shipment = shipments[trackingCode];
     
     if (!shipment) {
@@ -1688,9 +1688,9 @@ function editShipment(trackingCode) {
     showNotification(`Editing shipment: ${trackingCode}`, 'success');
 }
 
-function deleteShipment(trackingCode) {
+async function deleteShipment(trackingCode) {
     if (confirm('Are you sure you want to delete this shipment?')) {
-        const shipments = getShipments();
+        const shipments = await getShipments();
         delete shipments[trackingCode];
         saveShipments(shipments);
         showNotification('Shipment deleted', 'success');
@@ -2062,8 +2062,8 @@ function resetTracking() {
     }
 }
 
-function exportData() {
-    const shipments = getShipments();
+async function exportData() {
+    const shipments = await getShipments();
     const dataStr = JSON.stringify(shipments, null, 2);
     const dataBlob = new Blob([dataStr], { type: 'application/json' });
     const url = URL.createObjectURL(dataBlob);
