@@ -2020,7 +2020,8 @@ function resetTracking() {
 }
 
 function exportData() {
-    const dataStr = JSON.stringify(trackingData, null, 2);
+    const shipments = getShipments();
+    const dataStr = JSON.stringify(shipments, null, 2);
     const dataBlob = new Blob([dataStr], { type: 'application/json' });
     const url = URL.createObjectURL(dataBlob);
     const link = document.createElement('a');
@@ -2029,6 +2030,34 @@ function exportData() {
     link.click();
     URL.revokeObjectURL(url);
     showNotification('Data exported successfully', 'success');
+}
+
+function importData() {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'application/json';
+    
+    input.onchange = function(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                const importedData = JSON.parse(e.target.result);
+                saveShipments(importedData);
+                loadShipmentList();
+                populateShipmentSelector();
+                showNotification('Data imported successfully', 'success');
+            } catch (error) {
+                showNotification('Failed to import data. Please check the file format.', 'error');
+                console.error('Import error:', error);
+            }
+        };
+        reader.readAsText(file);
+    };
+    
+    input.click();
 }
 
 // Map functions
