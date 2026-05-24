@@ -12,6 +12,7 @@ document.addEventListener('DOMContentLoaded', function() {
     setupEventListeners();
     loadShipmentList();
     loadCustomerList();
+    populateShipmentSelector();
 });
 
 // User Management System
@@ -599,8 +600,8 @@ function populateShipmentSelector() {
     const shipments = getShipments();
     const shipmentCodes = Object.keys(shipments);
     
-    // Populate selector for Timeline, Package, and Contact editors
-    const selectors = ['timelineShipmentSelector', 'packageShipmentSelector', 'contactShipmentSelector'];
+    // Populate selector for Timeline, Package, Contact, and Status editors
+    const selectors = ['timelineShipmentSelector', 'packageShipmentSelector', 'contactShipmentSelector', 'statusShipmentSelector'];
     
     selectors.forEach(selectorId => {
         const selector = document.getElementById(selectorId);
@@ -615,6 +616,58 @@ function populateShipmentSelector() {
             selector.appendChild(option);
         });
     });
+}
+
+function selectShipmentForStatus() {
+    const selector = document.getElementById('statusShipmentSelector');
+    const trackingCode = selector.value;
+    
+    if (!trackingCode) {
+        showNotification('Please select a shipment', 'error');
+        return;
+    }
+    
+    const shipments = getShipments();
+    const shipment = shipments[trackingCode];
+    
+    if (!shipment) {
+        showNotification('Shipment not found', 'error');
+        return;
+    }
+    
+    currentShipmentId = trackingCode;
+    trackingData = shipment;
+    
+    document.getElementById('editTrackingNumber').value = shipment.trackingNumber;
+    document.getElementById('editCurrentStatus').value = shipment.currentStatus;
+    document.getElementById('editLastUpdate').value = shipment.lastUpdate;
+    document.getElementById('editEstimatedDelivery').value = shipment.estimatedDelivery;
+    
+    showNotification(`Editing shipment: ${trackingCode}`, 'success');
+}
+
+function saveStatusChanges() {
+    if (!currentShipmentId) {
+        showNotification('No shipment selected', 'error');
+        return;
+    }
+    
+    const shipments = getShipments();
+    const shipment = shipments[currentShipmentId];
+    
+    if (!shipment) {
+        showNotification('Shipment not found', 'error');
+        return;
+    }
+    
+    shipment.trackingNumber = document.getElementById('editTrackingNumber').value;
+    shipment.currentStatus = document.getElementById('editCurrentStatus').value;
+    shipment.lastUpdate = document.getElementById('editLastUpdate').value;
+    shipment.estimatedDelivery = document.getElementById('editEstimatedDelivery').value;
+    
+    saveShipments(shipments);
+    showNotification('Status changes saved successfully', 'success');
+    loadShipmentList();
 }
 
 function selectShipmentForEditor(editorType) {
@@ -1447,6 +1500,7 @@ function showCreateShipmentModal(customer = null) {
     if (result.success) {
         showNotification(`Shipment created! Tracking Code: ${result.shipment.trackingCode}`, 'success');
         loadShipmentList();
+        populateShipmentSelector();
     }
 }
 
@@ -1463,7 +1517,7 @@ function editShipment(trackingCode) {
     trackingData = shipment;
     
     // Update form fields with shipment data
-    document.getElementById('editTrackingNumber').value = shipment.trackingCode;
+    document.getElementById('editTrackingNumber').value = shipment.trackingNumber || shipment.trackingCode;
     document.getElementById('editCurrentStatus').value = shipment.currentStatus;
     document.getElementById('editLastUpdate').value = shipment.lastUpdate;
     document.getElementById('editEstimatedDelivery').value = shipment.estimatedDelivery;
@@ -1483,12 +1537,18 @@ function editShipment(trackingCode) {
     document.getElementById('editReceiverName').value = shipment.receiver.name;
     document.getElementById('editReceiverAddress').value = shipment.receiver.address;
     
+    // Also populate the status selector
+    const statusSelector = document.getElementById('statusShipmentSelector');
+    if (statusSelector) {
+        statusSelector.value = trackingCode;
+    }
+    
     initializeAdminMap();
     populateRouteList();
     populateTimelineList();
     populatePackageContents();
     
-    showNotification(`Editing shipment: ${trackingCode}`, 'info');
+    showNotification(`Editing shipment: ${trackingCode}`, 'success');
 }
 
 function deleteShipment(trackingCode) {
@@ -1559,8 +1619,19 @@ function populateFormFields() {
 
 // Initialize admin map
 function initializeAdminMap() {
+    if (!trackingData || !trackingData.currentLocation) {
+        console.log('No tracking data or current location available');
+        return;
+    }
+    
     if (adminMap) {
         adminMap.remove();
+    }
+    
+    const mapElement = document.getElementById('adminMap');
+    if (!mapElement) {
+        console.log('Admin map element not found');
+        return;
     }
     
     adminMap = L.map('adminMap').setView([trackingData.currentLocation.lat, trackingData.currentLocation.lng], 3);
@@ -1831,6 +1902,11 @@ function editTimelineEvent(index) {
 
 // Quick action functions
 function addNewLocation() {
+    if (!currentShipmentId) {
+        showNotification('Please select a shipment first using the shipment selector in Timeline, Package, or Contact editors', 'error');
+        return;
+    }
+    
     addRoutePoint();
     document.getElementById('routeList').scrollTop = document.getElementById('routeList').scrollHeight;
 }

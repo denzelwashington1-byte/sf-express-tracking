@@ -260,6 +260,13 @@
                 <!-- Current Status -->
                 <section class="current-status">
                     <h2>Current Tracking Status</h2>
+                    <div class="shipment-selector-container">
+                        <label>Select Shipment to Edit:</label>
+                        <select id="statusShipmentSelector" onchange="selectShipmentForStatus()">
+                            <option value="">Select a shipment...</option>
+                        </select>
+                        <button class="btn btn-primary" onclick="saveStatusChanges()">Save Changes</button>
+                    </div>
                     <div class="status-grid">
                         <div class="status-card">
                             <label>Tracking Number</label>
