@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Track Your Shipment - SF Express International</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://unpkg.com/mapbox-gl@3.0.0/dist/mapbox-gl.css" />
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%23001f3f'/%3E%3Ctext x='50' y='55' font-family='Arial' font-size='40' fill='white' text-anchor='middle'%3ESF%3C/text%3E%3C/svg%3E">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <div class="logo">
+                    <span class="logo-text">SF EXPRESS</span>
+                    <span class="logo-subtitle">INTERNATIONAL DELIVERY</span>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-container">
+            <div class="hero-content">
+                <h1 class="hero-title">Track Your Shipment</h1>
+                <p class="hero-subtitle">Enter your tracking code to see real-time shipment status</p>
+                
+                <!-- Tracking Form -->
+                <div class="tracking-form">
+                    <div class="form-group">
+                        <input type="text" id="trackingCode" placeholder="Enter tracking code" class="tracking-input">
+                        <button onclick="trackShipment()" class="tracking-button">Track</button>
+                    </div>
+                    <p class="form-hint">Enter the private tracking code provided by the sender</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Tracking Results -->
+    <section id="tracking-results" class="tracking-results" style="display: none;">
+        <div class="container">
+            <div class="results-header">
+                <h2>Shipment Tracking Details</h2>
+                <div class="tracking-number-display">
+                    <span class="label">Tracking Code:</span>
+                    <span id="displayTrackingCode" class="number"></span>
+                </div>
+            </div>
+
+            <!-- Status Overview -->
+            <div class="status-overview">
+                <div class="status-card current">
+                    <div class="status-icon">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <polyline points="12 6 12 12 16 14"></polyline>
+                        </svg>
+                    </div>
+                    <div class="status-content">
+                        <h3>Current Status</h3>
+                        <p id="currentStatus">Processing</p>
+                        <span id="lastUpdate" class="timestamp"></span>
+                    </div>
+                </div>
+                
+                <div class="status-card">
+                    <div class="status-icon">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+                            <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+                            <line x1="12" y1="22.08" x2="12" y2="12"></line>
+                        </svg>
+                    </div>
+                    <div class="status-content">
+                        <h3>Estimated Delivery</h3>
+                        <p id="estimatedDelivery">TBD</p>
+                        <span class="timestamp">Destination</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Live 3D Map -->
+            <div class="map-section">
+                <h3>Live 3D Map Tracking</h3>
+                <div id="trackingMap" class="tracking-map-3d"></div>
+                <div class="map-legend">
+                    <div class="legend-item">
+                        <div class="legend-dot current"></div>
+                        <span>Current Location</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-dot route"></div>
+                        <span>Shipment Route</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Package Details -->
+            <div class="package-details">
+                <h3>Package Information</h3>
+                <div class="details-grid">
+                    <div class="detail-card">
+                        <h4>Package Contents</h4>
+                        <ul class="package-list" id="packageContents">
+                        </ul>
+                    </div>
+                    
+                    <div class="detail-card">
+                        <h4>Package Weight</h4>
+                        <div class="weight-info">
+                            <span class="weight-value" id="packageWeight">0 kg</span>
+                            <span class="weight-unit">Total Weight</span>
+                        </div>
+                    </div>
+                    
+                    <div class="detail-card">
+                        <h4>Shipment Information</h4>
+                        <div class="shipment-info">
+                            <div class="info-row">
+                                <span>Service Type:</span>
+                                <span id="serviceType">International Express</span>
+                            </div>
+                            <div class="info-row">
+                                <span>Departure:</span>
+                                <span id="departure">Processing</span>
+                            </div>
+                            <div class="info-row">
+                                <span>Destination:</span>
+                                <span id="destination">Processing</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Contact Information -->
+            <div class="contact-info">
+                <div class="info-section">
+                    <h3>Sender Information</h3>
+                    <div class="contact-card">
+                        <div class="contact-header">
+                            <div class="avatar sender"></div>
+                            <div class="contact-name">
+                                <h4 id="senderName">Sender Name</h4>
+                                <span>Sender</span>
+                            </div>
+                        </div>
+                        <div class="contact-details">
+                            <p id="senderAddress">Sender Address</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="info-section">
+                    <h3>Receiver Information</h3>
+                    <div class="contact-card">
+                        <div class="contact-header">
+                            <div class="avatar receiver"></div>
+                            <div class="contact-name">
+                                <h4 id="receiverName">Receiver Name</h4>
+                                <span>Receiver</span>
+                            </div>
+                        </div>
+                        <div class="contact-details">
+                            <p id="receiverAddress">Receiver Address</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Timeline -->
+            <div class="timeline-section">
+                <h3>Shipment Timeline</h3>
+                <div class="timeline" id="timeline">
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-brand">
+                    <h3>SF EXPRESS INTERNATIONAL DELIVERY</h3>
+                    <p>Premium courier services for international shipments</p>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2026 SF Express International Delivery. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/mapbox-gl@3.0.0/dist/mapbox-gl.js"></script>
+    <script src="track-script.js"></script>
+</body>
+</html>

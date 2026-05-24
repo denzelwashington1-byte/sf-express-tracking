@@ -1,0 +1,113 @@
+{
+  "SF2026UKTHAI": {
+    "trackingNumber": "SF2026UKTHAI",
+    "currentStatus": "Arrived in Thailand",
+    "lastUpdate": "March 4, 2026 - 09:30 AM",
+    "estimatedDelivery": "March 8, 2026",
+    "currentLocation": {
+      "lat": 13.7563,
+      "lng": 100.5018,
+      "city": "Bangkok",
+      "country": "Thailand"
+    },
+    "route": [
+      {
+        "lat": 50.4501,
+        "lng": 30.5234,
+        "city": "Kyiv",
+        "country": "Ukraine",
+        "status": "Departed"
+      },
+      {
+        "lat": 52.2297,
+        "lng": 21.0122,
+        "city": "Warsaw",
+        "country": "Poland",
+        "status": "Completed"
+      },
+      {
+        "lat": 11.5564,
+        "lng": 104.9282,
+        "city": "Phnom Penh",
+        "country": "Cambodia",
+        "status": "Completed"
+      },
+      {
+        "lat": 13.7563,
+        "lng": 100.5018,
+        "city": "Bangkok",
+        "country": "Thailand",
+        "status": "Current"
+      }
+    ],
+    "packageDetails": {
+      "contents": [
+        "3 Big Luggage's",
+        "Mental Box (Black)",
+        "Documents"
+      ],
+      "weight": "87.5 kg",
+      "weightBreakdown": {
+        "luggage": "25kg each",
+        "mentalBox": "10kg",
+        "documents": "2.5kg"
+      },
+      "serviceType": "International Express",
+      "departure": "Kyiv, Ukraine",
+      "destination": "Bangkok, Thailand"
+    },
+    "sender": {
+      "name": "Walter Mario Oliveira",
+      "address": "Block 45 / B6 camp\nLypska St, 11\nKyiv, Ukraine, 01021"
+    },
+    "receiver": {
+      "name": "นุชจรีย์. มีบำรุง / Nuchjaree. (Mee Bamrung)",
+      "address": "45/268 Paisarn Park Ville Village\nSoi Wat Sukjai 13, Nimit Mai Road\nKhlong Sam Wa East, Bangkok 10510"
+    },
+    "timeline": [
+      {
+        "status": "Package Processed",
+        "description": "Shipment processed at facility",
+        "date": "March 2, 2026 - 06:00 AM",
+        "location": "Kyiv, Ukraine",
+        "completed": true
+      },
+      {
+        "status": "Departed Facility",
+        "description": "Package left Ukraine company facility",
+        "date": "March 2, 2026 - 08:00 AM",
+        "location": "Kyiv, Ukraine",
+        "completed": true
+      },
+      {
+        "status": "In Transit",
+        "description": "Package currently in transit to destination",
+        "date": "March 2, 2026 - 02:30 PM",
+        "location": "Warsaw, Poland",
+        "completed": true
+      },
+      {
+        "status": "Arrived in Cambodia",
+        "description": "Package arrived at Cambodia transit hub",
+        "date": "March 3, 2026 - 11:45 AM",
+        "location": "Phnom Penh, Cambodia",
+        "completed": true
+      },
+      {
+        "status": "Arrived in Thailand",
+        "description": "Package arrived in Thailand, processing for final delivery",
+        "date": "March 4, 2026 - 09:30 AM",
+        "location": "Bangkok, Thailand",
+        "completed": true,
+        "active": true
+      },
+      {
+        "status": "Out for Delivery",
+        "description": "Package out for final delivery",
+        "date": "March 4, 2026 - 02:00 PM",
+        "location": "Bangkok, Thailand",
+        "completed": false
+      }
+    ]
+  }
+}
