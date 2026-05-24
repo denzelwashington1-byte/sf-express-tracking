@@ -173,7 +173,7 @@ body {
 }
 
 .signup-banner {
-    background: url('signup-bg.png') center/cover no-repeat;
+    background: linear-gradient(135deg, rgba(0, 31, 63, 0.9), rgba(0, 51, 102, 0.9)), url('signup-bg.png') center/cover no-repeat;
     border-radius: 8px;
     padding: 1.5rem;
     margin-bottom: 1.5rem;
@@ -236,7 +236,7 @@ body {
 /* Admin Dashboard */
 .admin-dashboard {
     min-height: 100vh;
-    background: url('dashboard-bg.png') center/cover no-repeat fixed;
+    background: linear-gradient(rgba(255, 255, 255, 0.7), rgba(255, 255, 255, 0.7)), url('dashboard-bg.png') center/cover no-repeat fixed;
 }
 
 .admin-header {

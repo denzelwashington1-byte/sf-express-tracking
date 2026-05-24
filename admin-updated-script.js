@@ -5,6 +5,28 @@ let editMode = false;
 let currentUser = null;
 let currentShipmentId = null;
 
+// Firebase Configuration - REPLACE WITH YOUR FIREBASE CONFIG
+const firebaseConfig = {
+    apiKey: "YOUR_API_KEY",
+    authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+    databaseURL: "https://YOUR_PROJECT_ID-default-rtdb.firebaseio.com",
+    projectId: "YOUR_PROJECT_ID",
+    storageBucket: "YOUR_PROJECT_ID.appspot.com",
+    messagingSenderId: "YOUR_SENDER_ID"
+};
+
+// Initialize Firebase
+try {
+    firebase.initializeApp(firebaseConfig);
+    console.log('Firebase initialized successfully');
+} catch (e) {
+    console.error('Firebase initialization error:', e);
+}
+
+// Firebase database reference
+const db = firebase.database();
+const shipmentsRef = db.ref('shipments');
+
 // Initialize admin panel
 document.addEventListener('DOMContentLoaded', function() {
     initializeUserSystem();
@@ -436,22 +458,41 @@ function generateTrackingCode() {
 }
 
 function getShipments() {
-    try {
-        const response = fetch('shipments.json');
-        const data = response.json();
-        return data;
-    } catch (e) {
-        console.error('Error loading shipments from shipments.json:', e);
-        return JSON.parse(localStorage.getItem('sfExpressShipments')) || {};
-    }
+    return new Promise((resolve, reject) => {
+        shipmentsRef.once('value', (snapshot) => {
+            if (snapshot.exists()) {
+                resolve(snapshot.val());
+            } else {
+                // Fallback to localStorage if Firebase is empty
+                const localData = localStorage.getItem('sfExpressShipments');
+                resolve(localData ? JSON.parse(localData) : {});
+            }
+        }, (error) => {
+            console.error('Firebase error:', error);
+            // Fallback to localStorage on Firebase error
+            const localData = localStorage.getItem('sfExpressShipments');
+            resolve(localData ? JSON.parse(localData) : {});
+        });
+    });
 }
 
 function saveShipments(shipments) {
-    localStorage.setItem('sfExpressShipments', JSON.stringify(shipments));
+    // Save to Firebase
+    shipmentsRef.set(shipments)
+        .then(() => {
+            console.log('Shipments saved to Firebase successfully');
+            // Also save to localStorage as backup
+            localStorage.setItem('sfExpressShipments', JSON.stringify(shipments));
+        })
+        .catch((error) => {
+            console.error('Firebase save error:', error);
+            // Fallback to localStorage on Firebase error
+            localStorage.setItem('sfExpressShipments', JSON.stringify(shipments));
+        });
 }
 
-function createShipment(senderName, senderAddress, receiverName, receiverAddress, packageContents, weight, currentCity, currentLat, currentLng, privateCode) {
-    const shipments = getShipments();
+async function createShipment(senderName, senderAddress, receiverName, receiverAddress, packageContents, weight, currentCity, currentLat, currentLng, privateCode) {
+    const shipments = await getShipments();
     const trackingCode = generateTrackingCode();
     const shipmentId = Date.now();
     
@@ -520,8 +561,8 @@ function createShipment(senderName, senderAddress, receiverName, receiverAddress
     return { success: true, shipment: newShipment };
 }
 
-function loadShipmentList() {
-    const shipments = getShipments();
+async function loadShipmentList() {
+    const shipments = await getShipments();
     const shipmentList = document.getElementById('shipmentList');
     shipmentList.innerHTML = '';
     
@@ -573,8 +614,8 @@ function loadShipmentList() {
     populateShipmentSelector();
 }
 
-function updateDashboardAnalytics() {
-    const shipments = getShipments();
+async function updateDashboardAnalytics() {
+    const shipments = await getShipments();
     const shipmentCodes = Object.keys(shipments);
     
     let total = shipmentCodes.length;
@@ -599,8 +640,8 @@ function updateDashboardAnalytics() {
     document.getElementById('onHoldShipments').textContent = onHold;
 }
 
-function populateShipmentSelector() {
-    const shipments = getShipments();
+async function populateShipmentSelector() {
+    const shipments = await getShipments();
     const shipmentCodes = Object.keys(shipments);
     
     // Populate selector for Timeline, Package, Contact, Status, and Location editors
@@ -621,7 +662,7 @@ function populateShipmentSelector() {
     });
 }
 
-function selectShipmentForStatus() {
+async function selectShipmentForStatus() {
     const selector = document.getElementById('statusShipmentSelector');
     const trackingCode = selector.value;
     
@@ -630,7 +671,7 @@ function selectShipmentForStatus() {
         return;
     }
     
-    const shipments = getShipments();
+    const shipments = await getShipments();
     const shipment = shipments[trackingCode];
     
     if (!shipment) {
@@ -649,13 +690,13 @@ function selectShipmentForStatus() {
     showNotification(`Editing shipment: ${trackingCode}`, 'success');
 }
 
-function saveStatusChanges() {
+async function saveStatusChanges() {
     if (!currentShipmentId) {
         showNotification('No shipment selected', 'error');
         return;
     }
     
-    const shipments = getShipments();
+    const shipments = await getShipments();
     const shipment = shipments[currentShipmentId];
     
     if (!shipment) {
@@ -673,7 +714,7 @@ function saveStatusChanges() {
     loadShipmentList();
 }
 
-function selectShipmentForEditor(editorType) {
+async function selectShipmentForEditor(editorType) {
     const selectorId = `${editorType}ShipmentSelector`;
     const selector = document.getElementById(selectorId);
     const trackingCode = selector.value;
@@ -683,7 +724,7 @@ function selectShipmentForEditor(editorType) {
         return;
     }
     
-    const shipments = getShipments();
+    const shipments = await getShipments();
     const shipment = shipments[trackingCode];
     
     if (!shipment) {
@@ -708,13 +749,13 @@ function selectShipmentForEditor(editorType) {
     showNotification(`Editing shipment: ${trackingCode}`, 'success');
 }
 
-function saveEditorChanges(editorType) {
+async function saveEditorChanges(editorType) {
     if (!currentShipmentId) {
         showNotification('No shipment selected', 'error');
         return;
     }
     
-    const shipments = getShipments();
+    const shipments = await getShipments();
     const shipment = shipments[currentShipmentId];
     
     if (!shipment) {

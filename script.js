@@ -3,6 +3,28 @@ let map;
 let currentMarker;
 let routeLine;
 
+// Firebase Configuration - REPLACE WITH YOUR FIREBASE CONFIG
+const firebaseConfig = {
+    apiKey: "YOUR_API_KEY",
+    authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+    databaseURL: "https://YOUR_PROJECT_ID-default-rtdb.firebaseio.com",
+    projectId: "YOUR_PROJECT_ID",
+    storageBucket: "YOUR_PROJECT_ID.appspot.com",
+    messagingSenderId: "YOUR_SENDER_ID"
+};
+
+// Initialize Firebase
+try {
+    firebase.initializeApp(firebaseConfig);
+    console.log('Firebase initialized successfully');
+} catch (e) {
+    console.error('Firebase initialization error:', e);
+}
+
+// Firebase database reference
+const db = firebase.database();
+const shipmentsRef = db.ref('shipments');
+
 // Private tracking numbers database
 let trackingDatabase = {};
 
@@ -20,7 +42,7 @@ async function loadTrackingDataFromJSON() {
 }
 
 // Load tracking data from localStorage if available
-function loadTrackingDataFromStorage() {
+async function loadTrackingDataFromStorage() {
     const savedData = localStorage.getItem('sfTrackingData');
     if (savedData) {
         try {
@@ -31,14 +53,25 @@ function loadTrackingDataFromStorage() {
         }
     }
     
-    // Load shipments from admin panel
-    const adminShipments = localStorage.getItem('sfExpressShipments');
-    if (adminShipments) {
-        try {
-            const parsedShipments = JSON.parse(adminShipments);
-            Object.assign(trackingDatabase, parsedShipments);
-        } catch (e) {
-            console.error('Error loading admin shipments from localStorage:', e);
+    // Load shipments from Firebase
+    try {
+        const snapshot = await shipmentsRef.once('value');
+        if (snapshot.exists()) {
+            const firebaseShipments = snapshot.val();
+            Object.assign(trackingDatabase, firebaseShipments);
+            console.log('Shipments loaded from Firebase successfully');
+        }
+    } catch (e) {
+        console.error('Error loading shipments from Firebase:', e);
+        // Fallback to localStorage
+        const adminShipments = localStorage.getItem('sfExpressShipments');
+        if (adminShipments) {
+            try {
+                const parsedShipments = JSON.parse(adminShipments);
+                Object.assign(trackingDatabase, parsedShipments);
+            } catch (e) {
+                console.error('Error loading admin shipments from localStorage:', e);
+            }
         }
     }
 }
@@ -183,10 +216,9 @@ function initializeMap(data) {
     // Create new map
     map = L.map('map').setView([data.currentLocation.lat, data.currentLocation.lng], 5);
 
-    // Add tile layer with dark theme
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-        attribution: '© OpenStreetMap contributors © CARTO',
-        subdomains: 'abcd',
+    // Add tile layer with standard OpenStreetMap tiles
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors',
         maxZoom: 19
     }).addTo(map);
 
