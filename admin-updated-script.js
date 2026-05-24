@@ -600,8 +600,8 @@ function populateShipmentSelector() {
     const shipments = getShipments();
     const shipmentCodes = Object.keys(shipments);
     
-    // Populate selector for Timeline, Package, Contact, and Status editors
-    const selectors = ['timelineShipmentSelector', 'packageShipmentSelector', 'contactShipmentSelector', 'statusShipmentSelector'];
+    // Populate selector for Timeline, Package, Contact, Status, and Location editors
+    const selectors = ['timelineShipmentSelector', 'packageShipmentSelector', 'contactShipmentSelector', 'statusShipmentSelector', 'locationShipmentSelector'];
     
     selectors.forEach(selectorId => {
         const selector = document.getElementById(selectorId);
@@ -691,11 +691,16 @@ function selectShipmentForEditor(editorType) {
     currentShipmentId = trackingCode;
     trackingData = shipment;
     
-    populateFormFields();
-    initializeAdminMap();
-    populateRouteList();
-    populateTimelineList();
-    populatePackageContents();
+    if (editorType === 'location') {
+        initializeAdminMap();
+        populateRouteList();
+    } else {
+        populateFormFields();
+        initializeAdminMap();
+        populateRouteList();
+        populateTimelineList();
+        populatePackageContents();
+    }
     
     showNotification(`Editing shipment: ${trackingCode}`, 'success');
 }
@@ -714,21 +719,50 @@ function saveEditorChanges(editorType) {
         return;
     }
     
-    // Update shipment with current form data
-    shipment.trackingNumber = document.getElementById('editTrackingNumber').value;
-    shipment.currentStatus = document.getElementById('editCurrentStatus').value;
-    shipment.lastUpdate = document.getElementById('editLastUpdate').value;
-    shipment.estimatedDelivery = document.getElementById('editEstimatedDelivery').value;
-    
-    shipment.packageDetails.weight = document.getElementById('editTotalWeight').value;
-    shipment.packageDetails.serviceType = document.getElementById('editServiceType').value;
-    shipment.packageDetails.departure = document.getElementById('editDeparture').value;
-    shipment.packageDetails.destination = document.getElementById('editDestination').value;
-    
-    shipment.sender.name = document.getElementById('editSenderName').value;
-    shipment.sender.address = document.getElementById('editSenderAddress').value;
-    shipment.receiver.name = document.getElementById('editReceiverName').value;
-    shipment.receiver.address = document.getElementById('editReceiverAddress').value;
+    if (editorType === 'location') {
+        // Save route changes from the route list
+        const routeItems = document.querySelectorAll('.route-item');
+        const newRoute = [];
+        
+        routeItems.forEach(item => {
+            const lat = parseFloat(item.querySelector('.route-lat').value);
+            const lng = parseFloat(item.querySelector('.route-lng').value);
+            const city = item.querySelector('.route-city').value;
+            const country = item.querySelector('.route-country').value;
+            const status = item.querySelector('.route-status').value;
+            
+            newRoute.push({ lat, lng, city, country, status });
+        });
+        
+        shipment.route = newRoute;
+        
+        // Update current location to the last route point
+        if (newRoute.length > 0) {
+            const lastPoint = newRoute[newRoute.length - 1];
+            shipment.currentLocation = {
+                lat: lastPoint.lat,
+                lng: lastPoint.lng,
+                city: lastPoint.city,
+                country: lastPoint.country
+            };
+        }
+    } else {
+        // Update shipment with current form data
+        shipment.trackingNumber = document.getElementById('editTrackingNumber').value;
+        shipment.currentStatus = document.getElementById('editCurrentStatus').value;
+        shipment.lastUpdate = document.getElementById('editLastUpdate').value;
+        shipment.estimatedDelivery = document.getElementById('editEstimatedDelivery').value;
+        
+        shipment.packageDetails.weight = document.getElementById('editTotalWeight').value;
+        shipment.packageDetails.serviceType = document.getElementById('editServiceType').value;
+        shipment.packageDetails.departure = document.getElementById('editDeparture').value;
+        shipment.packageDetails.destination = document.getElementById('editDestination').value;
+        
+        shipment.sender.name = document.getElementById('editSenderName').value;
+        shipment.sender.address = document.getElementById('editSenderAddress').value;
+        shipment.receiver.name = document.getElementById('editReceiverName').value;
+        shipment.receiver.address = document.getElementById('editReceiverAddress').value;
+    }
     
     saveShipments(shipments);
     showNotification('Changes saved successfully', 'success');
@@ -1496,10 +1530,10 @@ function showCreateShipmentModal(customer = null) {
     const currentCity = prompt('Enter current city/location:');
     if (!currentCity) return;
     
-    const currentLat = prompt('Enter current latitude (for map):');
+    const currentLat = prompt('Enter current latitude (for map, e.g., 51.5074 for London):');
     if (!currentLat) return;
     
-    const currentLng = prompt('Enter current longitude (for map):');
+    const currentLng = prompt('Enter current longitude (for map, e.g., -0.1278 for London):');
     if (!currentLng) return;
     
     const result = createShipment(
@@ -1518,6 +1552,11 @@ function showCreateShipmentModal(customer = null) {
         showNotification(`Shipment created! Tracking Code: ${result.shipment.trackingCode}`, 'success');
         loadShipmentList();
         populateShipmentSelector();
+        
+        // Automatically select the new shipment and initialize map
+        setTimeout(() => {
+            editShipment(result.shipment.trackingCode);
+        }, 500);
     }
 }
 
@@ -1560,7 +1599,19 @@ function editShipment(trackingCode) {
         statusSelector.value = trackingCode;
     }
     
-    initializeAdminMap();
+    // Also populate the location selector
+    const locationSelector = document.getElementById('locationShipmentSelector');
+    if (locationSelector) {
+        locationSelector.value = trackingCode;
+    }
+    
+    // Initialize map with current location
+    if (shipment.currentLocation && shipment.currentLocation.lat && shipment.currentLocation.lng) {
+        setTimeout(() => {
+            initializeAdminMap();
+        }, 100);
+    }
+    
     populateRouteList();
     populateTimelineList();
     populatePackageContents();

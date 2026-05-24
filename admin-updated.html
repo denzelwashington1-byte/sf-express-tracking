@@ -290,6 +290,13 @@
                 <!-- Location Editor -->
                 <section class="location-editor">
                     <h2>Location Management</h2>
+                    <div class="shipment-selector-container">
+                        <label>Select Shipment to Edit:</label>
+                        <select id="locationShipmentSelector" onchange="selectShipmentForEditor('location')">
+                            <option value="">Select a shipment...</option>
+                        </select>
+                        <button class="btn btn-primary" onclick="saveEditorChanges('location')">Save Changes</button>
+                    </div>
                     <div class="editor-grid">
                         <div class="editor-left">
                             <h3>Route Points</h3>
