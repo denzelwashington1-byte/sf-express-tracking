@@ -1375,19 +1375,35 @@ function saveCustomers(customers) {
 }
 
 function showAddCustomerModal() {
+    console.log('showAddCustomerModal called');
+    
     const name = prompt('Enter customer name:');
-    if (!name) return;
+    if (!name) {
+        console.log('No name entered');
+        return;
+    }
     
     const email = prompt('Enter customer email:');
-    if (!email) return;
+    if (!email) {
+        console.log('No email entered');
+        return;
+    }
     
     const phone = prompt('Enter customer phone:');
-    if (!phone) return;
+    if (!phone) {
+        console.log('No phone entered');
+        return;
+    }
     
     const address = prompt('Enter customer address:');
-    if (!address) return;
+    if (!address) {
+        console.log('No address entered');
+        return;
+    }
     
     const customers = getCustomers();
+    console.log('Current customers:', customers);
+    
     const newCustomer = {
         id: Date.now(),
         name: name,
@@ -1400,6 +1416,7 @@ function showAddCustomerModal() {
     customers.push(newCustomer);
     saveCustomers(customers);
     
+    console.log('Customer saved:', newCustomer);
     showNotification('Customer added successfully', 'success');
     loadCustomerList();
 }
