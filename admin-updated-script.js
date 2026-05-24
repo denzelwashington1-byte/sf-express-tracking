@@ -5,14 +5,16 @@ let editMode = false;
 let currentUser = null;
 let currentShipmentId = null;
 
-// Firebase Configuration - REPLACE WITH YOUR FIREBASE CONFIG
+// Firebase Configuration
 const firebaseConfig = {
-    apiKey: "YOUR_API_KEY",
-    authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-    databaseURL: "https://YOUR_PROJECT_ID-default-rtdb.firebaseio.com",
-    projectId: "YOUR_PROJECT_ID",
-    storageBucket: "YOUR_PROJECT_ID.appspot.com",
-    messagingSenderId: "YOUR_SENDER_ID"
+  apiKey: "AIzaSyAfP9igXm9zkoQz0XoDQ_GRtybsxHuFQDI",
+  authDomain: "sfexpressinternational-cf6be.firebaseapp.com",
+  databaseURL: "https://sfexpressinternational-cf6be-default-rtdb.firebaseio.com",
+  projectId: "sfexpressinternational-cf6be",
+  storageBucket: "sfexpressinternational-cf6be.firebasestorage.app",
+  messagingSenderId: "303479611649",
+  appId: "1:303479611649:web:785021941ee80b713a3b00",
+  measurementId: "G-LZNEGVH219"
 };
 
 // Initialize Firebase
