@@ -57,11 +57,14 @@ async function loadTrackingDataFromStorage() {
     
     // Load shipments from Firebase
     try {
+        console.log('Attempting to load shipments from Firebase...');
         const snapshot = await shipmentsRef.once('value');
         if (snapshot.exists()) {
             const firebaseShipments = snapshot.val();
             Object.assign(trackingDatabase, firebaseShipments);
-            console.log('Shipments loaded from Firebase successfully');
+            console.log('Shipments loaded from Firebase successfully:', Object.keys(firebaseShipments));
+        } else {
+            console.log('Firebase database is empty - no shipments found');
         }
     } catch (e) {
         console.error('Error loading shipments from Firebase:', e);
@@ -71,6 +74,7 @@ async function loadTrackingDataFromStorage() {
             try {
                 const parsedShipments = JSON.parse(adminShipments);
                 Object.assign(trackingDatabase, parsedShipments);
+                console.log('Loaded shipments from localStorage as fallback');
             } catch (e) {
                 console.error('Error loading admin shipments from localStorage:', e);
             }
@@ -124,7 +128,7 @@ document.addEventListener('DOMContentLoaded', async function() {
 });
 
 // Main tracking function
-function trackShipment() {
+async function trackShipment() {
     const trackingNumber = document.getElementById('trackingNumber').value.trim();
     const privateCode = document.getElementById('privateCode').value.trim();
     
@@ -144,6 +148,9 @@ function trackShipment() {
     button.innerHTML = '<span class="loading"></span> Tracking...';
     button.disabled = true;
 
+    // Ensure Firebase data is loaded
+    await loadTrackingDataFromStorage();
+    
     // Simulate API call delay
     setTimeout(() => {
         const shipmentData = trackingDatabase[trackingNumber];
