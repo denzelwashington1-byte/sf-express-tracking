@@ -173,7 +173,7 @@ body {
 }
 
 .signup-banner {
-    background: linear-gradient(135deg, #001f3f 0%, #003366 100%);
+    background: url('signup-bg.png') center/cover no-repeat;
     border-radius: 8px;
     padding: 1.5rem;
     margin-bottom: 1.5rem;
@@ -183,6 +183,7 @@ body {
     flex-direction: column;
     align-items: center;
     gap: 1.5rem;
+    min-height: 200px;
 }
 
 .gold-logo {
@@ -235,7 +236,7 @@ body {
 /* Admin Dashboard */
 .admin-dashboard {
     min-height: 100vh;
-    background: var(--light-bg);
+    background: url('dashboard-bg.png') center/cover no-repeat fixed;
 }
 
 .admin-header {
