@@ -1572,6 +1572,7 @@ function useCustomerForShipment(customerId) {
 }
 
 function showCreateShipmentModal(customer = null) {
+    console.log('showCreateShipmentModal called');
     const senderName = prompt('Enter sender name:', customer ? customer.name : '');
     if (!senderName) return;
     
@@ -1602,6 +1603,7 @@ function showCreateShipmentModal(customer = null) {
     const privateCode = prompt('Enter private access code (required for tracking):');
     if (!privateCode) return;
     
+    console.log('Calling createShipment with data:', { senderName, receiverName });
     const result = createShipment(
         senderName,
         senderAddress,
@@ -1615,10 +1617,15 @@ function showCreateShipmentModal(customer = null) {
         privateCode
     );
     
+    console.log('createShipment result:', result);
     if (result.success) {
         showNotification(`Shipment created! Tracking Code: ${result.shipment.trackingCode}`, 'success');
+        console.log('Calling loadShipmentList after creation');
         loadShipmentList();
         populateShipmentSelector();
+    } else {
+        console.error('Shipment creation failed');
+        showNotification('Failed to create shipment', 'error');
     }
 }
 
