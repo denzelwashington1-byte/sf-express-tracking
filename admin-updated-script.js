@@ -460,36 +460,52 @@ function generateTrackingCode() {
 }
 
 function getShipments() {
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
+        // Try localStorage first for reliability
+        const localData = localStorage.getItem('sfExpressShipments');
+        if (localData) {
+            try {
+                const parsedData = JSON.parse(localData);
+                console.log('Shipments loaded from localStorage:', Object.keys(parsedData));
+                resolve(parsedData);
+                return;
+            } catch (e) {
+                console.error('Error parsing localStorage data:', e);
+            }
+        }
+        
+        // Fallback to Firebase
         shipmentsRef.once('value', (snapshot) => {
             if (snapshot.exists()) {
-                resolve(snapshot.val());
+                const firebaseData = snapshot.val();
+                console.log('Shipments loaded from Firebase:', Object.keys(firebaseData));
+                // Also save to localStorage for backup
+                localStorage.setItem('sfExpressShipments', JSON.stringify(firebaseData));
+                resolve(firebaseData);
             } else {
-                // Fallback to localStorage if Firebase is empty
-                const localData = localStorage.getItem('sfExpressShipments');
-                resolve(localData ? JSON.parse(localData) : {});
+                console.log('No shipments found in Firebase or localStorage');
+                resolve({});
             }
         }, (error) => {
             console.error('Firebase error:', error);
-            // Fallback to localStorage on Firebase error
-            const localData = localStorage.getItem('sfExpressShipments');
-            resolve(localData ? JSON.parse(localData) : {});
+            resolve({});
         });
     });
 }
 
 function saveShipments(shipments) {
-    // Save to Firebase
+    console.log('Saving shipments...');
+    // Save to localStorage first for reliability
+    localStorage.setItem('sfExpressShipments', JSON.stringify(shipments));
+    console.log('Shipments saved to localStorage:', Object.keys(shipments));
+    
+    // Try to save to Firebase as backup
     shipmentsRef.set(shipments)
         .then(() => {
-            console.log('Shipments saved to Firebase successfully');
-            // Also save to localStorage as backup
-            localStorage.setItem('sfExpressShipments', JSON.stringify(shipments));
+            console.log('Shipments also saved to Firebase successfully');
         })
         .catch((error) => {
-            console.error('Firebase save error:', error);
-            // Fallback to localStorage on Firebase error
-            localStorage.setItem('sfExpressShipments', JSON.stringify(shipments));
+            console.error('Firebase save error (using localStorage as primary):', error);
         });
 }
 
