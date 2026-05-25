@@ -5,6 +5,10 @@ let editMode = false;
 let currentUser = null;
 let currentShipmentId = null;
 
+// Activity Log and Notifications
+let activityLog = JSON.parse(localStorage.getItem('sfExpressActivityLog')) || [];
+let notifications = JSON.parse(localStorage.getItem('sfExpressNotifications')) || [];
+
 // Firebase Configuration
 const firebaseConfig = {
   apiKey: "AIzaSyAhFmYpQvINgDoE4PWkP6AwzyuY8OxwTP8",
@@ -517,37 +521,6 @@ async function createShipment(senderName, senderAddress, receiverName, receiverA
     const newShipment = {
         id: shipmentId,
         trackingCode: trackingCode,
-        trackingNumber: trackingCode,
-        privateCode: privateCode,
-        currentStatus: 'Processing',
-        lastUpdate: new Date().toLocaleString('en-US', { 
-            month: 'short', 
-            day: 'numeric', 
-            year: 'numeric', 
-            hour: '2-digit', 
-            minute: '2-digit' 
-        }),
-        estimatedDelivery: 'TBD',
-        currentLocation: {
-            lat: parseFloat(currentLat) || 0,
-            lng: parseFloat(currentLng) || 0,
-            city: currentCity || 'Processing',
-            country: 'Facility'
-        },
-        route: [{
-            lat: parseFloat(currentLat) || 0,
-            lng: parseFloat(currentLng) || 0,
-            city: currentCity || 'Processing',
-            country: 'Facility',
-            status: 'In Transit'
-        }],
-        packageDetails: {
-            contents: packageContents,
-            weight: weight,
-            serviceType: 'International Express',
-            departure: currentCity || 'Processing',
-            destination: 'Processing'
-        },
         sender: {
             name: senderName,
             address: senderAddress
@@ -556,25 +529,51 @@ async function createShipment(senderName, senderAddress, receiverName, receiverA
             name: receiverName,
             address: receiverAddress
         },
-        timeline: [{
-            status: 'Shipment Created',
-            description: 'Shipment created and processing started',
-            date: new Date().toLocaleString('en-US', { 
-                month: 'short', 
-                day: 'numeric', 
-                year: 'numeric', 
-                hour: '2-digit', 
-                minute: '2-digit' 
-            }),
-            location: currentCity || 'Processing Facility',
-            completed: true,
-            active: true
-        }],
-        trackingUrl: `${window.location.origin}/track.html?code=${trackingCode}`
+        packageDetails: {
+            contents: packageContents,
+            weight: weight
+        },
+        currentLocation: {
+            city: currentCity,
+            lat: currentLat,
+            lng: currentLng
+        },
+        currentStatus: 'Pending',
+        privateCode: privateCode,
+        trackingUrl: `${window.location.origin}/?code=${trackingCode}`,
+        createdAt: new Date().toISOString(),
+        lastUpdate: new Date().toLocaleString('en-US', { 
+            month: 'short', 
+            day: 'numeric', 
+            year: 'numeric', 
+            hour: '2-digit', 
+            minute: '2-digit' 
+        }),
+        estimatedDelivery: '3-5 business days',
+        timeline: [
+            {
+                status: 'Shipment Created',
+                description: 'Shipment created and awaiting pickup',
+                date: new Date().toLocaleString('en-US', { 
+                    month: 'short', 
+                    day: 'numeric', 
+                    year: 'numeric', 
+                    hour: '2-digit', 
+                    minute: '2-digit' 
+                }),
+                location: currentCity,
+                completed: true,
+                active: true
+            }
+        ]
     };
     
     shipments[trackingCode] = newShipment;
     saveShipments(shipments);
+    
+    // Log activity and add notification
+    logActivity('Shipment Created', `Tracking code: ${trackingCode}, From: ${senderName} to ${receiverName}`);
+    addNotification(`New shipment created: ${trackingCode}`, 'success', `From: ${senderName} to ${receiverName}`);
     
     return { success: true, shipment: newShipment };
 }
@@ -1635,6 +1634,9 @@ async function editShipment(trackingCode) {
     currentShipmentId = trackingCode;
     trackingData = shipment;
     
+    // Log activity
+    logActivity('Shipment Edit Started', `Tracking code: ${trackingCode}`);
+    
     // Scroll to the Current Tracking Status section
     const statusSection = document.querySelector('.current-status');
     if (statusSection) {
@@ -1709,8 +1711,14 @@ async function editShipment(trackingCode) {
 async function deleteShipment(trackingCode) {
     if (confirm('Are you sure you want to delete this shipment?')) {
         const shipments = await getShipments();
+        const shipment = shipments[trackingCode];
         delete shipments[trackingCode];
         saveShipments(shipments);
+        
+        // Log activity and add notification
+        logActivity('Shipment Deleted', `Tracking code: ${trackingCode}`);
+        addNotification(`Shipment deleted: ${trackingCode}`, 'warning');
+        
         showNotification('Shipment deleted', 'success');
         loadShipmentList();
     }
@@ -2214,6 +2222,133 @@ function hideNotification() {
     const notification = document.getElementById('notification');
     notification.classList.remove('show');
 }
+
+// Activity Log Functions
+function logActivity(action, details) {
+    const activity = {
+        id: Date.now(),
+        timestamp: new Date().toLocaleString(),
+        action: action,
+        details: details,
+        user: currentUser ? currentUser.username : 'Unknown'
+    };
+    
+    activityLog.unshift(activity);
+    // Keep only last 100 activities
+    if (activityLog.length > 100) {
+        activityLog = activityLog.slice(0, 100);
+    }
+    
+    localStorage.setItem('sfExpressActivityLog', JSON.stringify(activityLog));
+    console.log('Activity logged:', action, details);
+}
+
+function showActivityLog() {
+    const modal = document.getElementById('activityLogModal');
+    const list = document.getElementById('activityLogList');
+    
+    if (activityLog.length === 0) {
+        list.innerHTML = '<p style="text-align: center; color: var(--text-secondary);">No activities recorded</p>';
+    } else {
+        list.innerHTML = activityLog.map(activity => `
+            <div class="activity-item">
+                <div class="activity-time">${activity.timestamp}</div>
+                <div class="activity-action">${activity.action}</div>
+                <div class="activity-details">${activity.details} - ${activity.user}</div>
+            </div>
+        `).join('');
+    }
+    
+    modal.style.display = 'flex';
+}
+
+function closeActivityLog() {
+    document.getElementById('activityLogModal').style.display = 'none';
+}
+
+function clearActivityLog() {
+    if (confirm('Are you sure you want to clear the activity log?')) {
+        activityLog = [];
+        localStorage.setItem('sfExpressActivityLog', JSON.stringify(activityLog));
+        showActivityLog();
+        showNotification('Activity log cleared', 'success');
+    }
+}
+
+// Notification Functions
+function addNotification(message, type = 'info', details = '') {
+    const notification = {
+        id: Date.now(),
+        timestamp: new Date().toLocaleString(),
+        message: message,
+        type: type,
+        details: details,
+        read: false
+    };
+    
+    notifications.unshift(notification);
+    // Keep only last 50 notifications
+    if (notifications.length > 50) {
+        notifications = notifications.slice(0, 50);
+    }
+    
+    localStorage.setItem('sfExpressNotifications', JSON.stringify(notifications));
+    
+    // Request browser notification permission
+    if (Notification.permission === 'granted') {
+        new Notification('SF Express', {
+            body: message,
+            icon: '/favicon.ico'
+        });
+    } else if (Notification.permission !== 'denied') {
+        Notification.requestPermission();
+    }
+    
+    console.log('Notification added:', message);
+}
+
+function showNotifications() {
+    const modal = document.getElementById('notificationsModal');
+    const list = document.getElementById('notificationsList');
+    
+    if (notifications.length === 0) {
+        list.innerHTML = '<p style="text-align: center; color: var(--text-secondary);">No notifications</p>';
+    } else {
+        list.innerHTML = notifications.map(notification => `
+            <div class="notification-item ${notification.read ? '' : 'unread'}">
+                <div class="notification-time">${notification.timestamp}</div>
+                <div class="notification-message">${notification.message}</div>
+                <div class="notification-details">${notification.details || ''}</div>
+            </div>
+        `).join('');
+        
+        // Mark all as read
+        notifications.forEach(n => n.read = true);
+        localStorage.setItem('sfExpressNotifications', JSON.stringify(notifications));
+    }
+    
+    modal.style.display = 'flex';
+}
+
+function closeNotifications() {
+    document.getElementById('notificationsModal').style.display = 'none';
+}
+
+function clearNotifications() {
+    if (confirm('Are you sure you want to clear all notifications?')) {
+        notifications = [];
+        localStorage.setItem('sfExpressNotifications', JSON.stringify(notifications));
+        showNotifications();
+        showNotification('Notifications cleared', 'success');
+    }
+}
+
+// Request notification permission on page load
+document.addEventListener('DOMContentLoaded', function() {
+    if (Notification.permission === 'default') {
+        Notification.requestPermission();
+    }
+});
 
 // Keyboard shortcuts
 document.addEventListener('keydown', function(e) {
