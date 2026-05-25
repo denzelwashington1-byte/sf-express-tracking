@@ -30,13 +30,13 @@ const db = firebase.database();
 const shipmentsRef = db.ref('shipments');
 
 // Initialize admin panel
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', async function() {
     initializeUserSystem();
     loadTrackingData();
     setupEventListeners();
-    loadShipmentList();
+    await loadShipmentList();
     loadCustomerList();
-    populateShipmentSelector();
+    await populateShipmentSelector();
 });
 
 // User Management System
@@ -564,7 +564,9 @@ async function createShipment(senderName, senderAddress, receiverName, receiverA
 }
 
 async function loadShipmentList() {
+    console.log('Loading shipment list...');
     const shipments = await getShipments();
+    console.log('Shipments loaded:', Object.keys(shipments));
     const shipmentList = document.getElementById('shipmentList');
     shipmentList.innerHTML = '';
     

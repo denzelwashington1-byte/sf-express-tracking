@@ -398,6 +398,12 @@ body {
     border: 2px solid var(--border-color);
 }
 
+#map {
+    height: 100%;
+    width: 100%;
+    min-height: 400px;
+}
+
 .map-legend {
     display: flex;
     gap: 2rem;
