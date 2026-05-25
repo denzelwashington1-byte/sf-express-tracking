@@ -5,14 +5,14 @@ let routeLine;
 
 // Firebase Configuration
 const firebaseConfig = {
-  apiKey: "AIzaSyAfP9igXm9zkoQz0XoDQ_GRtybsxHuFQDI",
-  authDomain: "sfexpressinternational-cf6be.firebaseapp.com",
-  databaseURL: "https://sfexpressinternational-cf6be-default-rtdb.firebaseio.com",
-  projectId: "sfexpressinternational-cf6be",
-  storageBucket: "sfexpressinternational-cf6be.firebasestorage.app",
-  messagingSenderId: "303479611649",
-  appId: "1:303479611649:web:785021941ee80b713a3b00",
-  measurementId: "G-LZNEGVH219"
+  apiKey: "AIzaSyAhFmYpQvINgDoE4PWkP6AwzyuY8OxwTP8",
+  authDomain: "sfexpressinternational-7b50b.firebaseapp.com",
+  databaseURL: "https://sfexpressinternational-7b50b-default-rtdb.firebaseio.com",
+  projectId: "sfexpressinternational-7b50b",
+  storageBucket: "sfexpressinternational-7b50b.firebasestorage.app",
+  messagingSenderId: "808031073166",
+  appId: "1:808031073166:web:ced6ffc6d9e98453bceadf",
+  measurementId: "G-SWT5E7WQZX"
 };
 
 // Initialize Firebase
