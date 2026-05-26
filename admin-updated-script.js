@@ -504,17 +504,19 @@ function getShipments() {
 
 function saveShipments(shipments) {
     console.log('Saving shipments...');
-    // Save to localStorage first for reliability
-    localStorage.setItem('sfExpressShipments', JSON.stringify(shipments));
-    console.log('Shipments saved to localStorage:', Object.keys(shipments));
-    
-    // Try to save to Firebase as backup
+    // Save to Firebase first for cross-device tracking
     shipmentsRef.set(shipments)
         .then(() => {
-            console.log('Shipments also saved to Firebase successfully');
+            console.log('Shipments saved to Firebase successfully:', Object.keys(shipments));
+            // Also save to localStorage as backup
+            localStorage.setItem('sfExpressShipments', JSON.stringify(shipments));
+            console.log('Shipments also saved to localStorage as backup');
         })
         .catch((error) => {
-            console.error('Firebase save error (using localStorage as primary):', error);
+            console.error('Firebase save error (using localStorage as fallback):', error);
+            // Fallback to localStorage only if Firebase fails
+            localStorage.setItem('sfExpressShipments', JSON.stringify(shipments));
+            console.log('Shipments saved to localStorage as fallback');
         });
 }
 
