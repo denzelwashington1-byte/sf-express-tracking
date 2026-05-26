@@ -32,6 +32,11 @@ try {
 // Firebase database reference
 const db = firebase.database();
 const shipmentsRef = db.ref('shipments');
+const chatsRef = db.ref('chats');
+
+// Chat variables
+let currentChatTrackingCode = null;
+let adminChatListener = null;
 
 // Initialize admin panel
 document.addEventListener('DOMContentLoaded', async function() {
@@ -2391,6 +2396,125 @@ function clearNotifications() {
         showNotification('Notifications cleared', 'success');
     }
 }
+
+// Customer Care Chat Functions
+function showCustomerCare() {
+    const modal = document.getElementById('customerCareModal');
+    modal.style.display = 'block';
+    populateChatShipmentSelector();
+}
+
+function closeCustomerCare() {
+    const modal = document.getElementById('customerCareModal');
+    modal.style.display = 'none';
+    
+    // Remove chat listener
+    if (adminChatListener) {
+        chatsRef.child(currentChatTrackingCode).off('value', adminChatListener);
+        adminChatListener = null;
+    }
+    currentChatTrackingCode = null;
+}
+
+async function populateChatShipmentSelector() {
+    const selector = document.getElementById('chatShipmentSelector');
+    selector.innerHTML = '<option value="">-- Select a shipment --</option>';
+    
+    const shipments = await getShipments();
+    Object.keys(shipments).forEach(trackingCode => {
+        const shipment = shipments[trackingCode];
+        const option = document.createElement('option');
+        option.value = trackingCode;
+        option.textContent = `${trackingCode} - ${shipment.receiver.name}`;
+        selector.appendChild(option);
+    });
+}
+
+function loadSelectedChat() {
+    const selector = document.getElementById('chatShipmentSelector');
+    const trackingCode = selector.value;
+    
+    if (!trackingCode) {
+        currentChatTrackingCode = null;
+        return;
+    }
+    
+    currentChatTrackingCode = trackingCode;
+    
+    // Remove existing listener
+    if (adminChatListener) {
+        chatsRef.off('value', adminChatListener);
+    }
+    
+    // Listen for chat messages
+    adminChatListener = chatsRef.child(trackingCode).on('value', (snapshot) => {
+        const chatMessages = document.getElementById('adminChatMessages');
+        chatMessages.innerHTML = '';
+        
+        if (snapshot.exists()) {
+            const messages = snapshot.val();
+            Object.values(messages).forEach(msg => {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = `chat-message ${msg.sender === 'customer' ? 'customer' : 'admin'}`;
+                messageDiv.innerHTML = `
+                    <div class="message-content">
+                        <p>${msg.message}</p>
+                        <span class="message-time">${msg.timestamp}</span>
+                    </div>
+                `;
+                chatMessages.appendChild(messageDiv);
+            });
+        } else {
+            const noMessagesDiv = document.createElement('div');
+            noMessagesDiv.className = 'chat-message system';
+            noMessagesDiv.innerHTML = `
+                <div class="message-content">
+                    <p>No messages yet. Wait for customer to initiate chat.</p>
+                </div>
+            `;
+            chatMessages.appendChild(noMessagesDiv);
+        }
+        
+        // Scroll to bottom
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    });
+}
+
+function sendAdminChatMessage() {
+    const chatInput = document.getElementById('adminChatInput');
+    const message = chatInput.value.trim();
+    
+    if (!message || !currentChatTrackingCode) {
+        return;
+    }
+    
+    const newMessage = {
+        message: message,
+        sender: 'admin',
+        timestamp: new Date().toLocaleString('en-US', {
+            month: 'short',
+            day: 'numeric',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        })
+    };
+    
+    chatsRef.child(currentChatTrackingCode).push(newMessage);
+    chatInput.value = '';
+}
+
+// Handle Enter key for admin chat
+document.addEventListener('DOMContentLoaded', function() {
+    const adminChatInput = document.getElementById('adminChatInput');
+    if (adminChatInput) {
+        adminChatInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                sendAdminChatMessage();
+            }
+        });
+    }
+});
 
 // Keyboard shortcuts
 document.addEventListener('keydown', function(e) {

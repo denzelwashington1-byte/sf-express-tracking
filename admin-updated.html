@@ -122,6 +122,7 @@
                 <div class="header-actions">
                     <button id="activityLogBtn" class="btn btn-primary" onclick="showActivityLog()">Activity Log</button>
                     <button id="notificationBtn" class="btn btn-primary" onclick="showNotifications()">Notifications</button>
+                    <button id="customerCareBtn" class="btn btn-primary" onclick="showCustomerCare()">Customer Care</button>
                     <button id="logoutBtn" class="btn btn-secondary">Logout</button>
                 </div>
             </div>
@@ -485,6 +486,40 @@
                 <div class="modal-footer">
                     <button onclick="clearNotifications()" class="btn btn-secondary">Clear All</button>
                     <button onclick="closeNotifications()" class="btn btn-primary">Close</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Customer Care Modal -->
+        <div id="customerCareModal" class="modal" style="display: none;">
+            <div class="modal-content" style="max-width: 800px;">
+                <div class="modal-header">
+                    <h2>Customer Care Chat</h2>
+                    <button onclick="closeCustomerCare()" class="modal-close">×</button>
+                </div>
+                <div class="modal-body">
+                    <div class="chat-selector">
+                        <label>Select Shipment:</label>
+                        <select id="chatShipmentSelector" onchange="loadSelectedChat()">
+                            <option value="">-- Select a shipment --</option>
+                        </select>
+                    </div>
+                    <div class="admin-chat-container">
+                        <div class="admin-chat-messages" id="adminChatMessages">
+                            <div class="chat-message system">
+                                <div class="message-content">
+                                    <p>Select a shipment to view customer messages</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="chat-input-container">
+                            <input type="text" id="adminChatInput" placeholder="Type your response..." />
+                            <button onclick="sendAdminChatMessage()" class="chat-send-btn">Send</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button onclick="closeCustomerCare()" class="btn btn-primary">Close</button>
                 </div>
             </div>
         </div>
