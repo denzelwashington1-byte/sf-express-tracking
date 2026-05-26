@@ -1569,7 +1569,7 @@ function useCustomerForShipment(customerId) {
     showCreateShipmentModal(customer);
 }
 
-function showCreateShipmentModal(customer = null) {
+async function showCreateShipmentModal(customer = null) {
     console.log('showCreateShipmentModal called');
     const senderName = prompt('Enter sender name:', customer ? customer.name : '');
     if (!senderName) return;
@@ -1602,7 +1602,7 @@ function showCreateShipmentModal(customer = null) {
     if (!privateCode) return;
     
     console.log('Calling createShipment with data:', { senderName, receiverName });
-    const result = createShipment(
+    const result = await createShipment(
         senderName,
         senderAddress,
         receiverName,
