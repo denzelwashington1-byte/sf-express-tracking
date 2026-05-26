@@ -38,6 +38,7 @@
                         <input type="text" id="trackingCode" placeholder="Enter tracking code" class="tracking-input">
                         <button onclick="trackShipment()" class="tracking-button">Track</button>
                     </div>
+                    <button onclick="startBarcodeScanner()" class="barcode-scan-btn">📷 Scan Barcode</button>
                     <p class="form-hint">Enter the private tracking code provided by the sender</p>
                 </div>
             </div>
@@ -218,9 +219,28 @@
         </div>
     </footer>
 
+    <!-- Barcode Scanner Modal -->
+    <div id="barcodeScannerModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Scan Barcode</h2>
+                <button onclick="closeBarcodeScanner()" class="modal-close">×</button>
+            </div>
+            <div class="modal-body">
+                <div id="reader" style="width: 100%;"></div>
+            </div>
+            <div class="modal-footer">
+                <button onclick="closeBarcodeScanner()" class="btn btn-secondary">Cancel</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    
+    <!-- HTML5-QRCode Library for barcode/QR scanning -->
+    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
     
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://unpkg.com/mapbox-gl@3.0.0/dist/mapbox-gl.js"></script>

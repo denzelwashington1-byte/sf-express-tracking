@@ -413,6 +413,72 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
+// Barcode Scanner Functions
+let html5QrcodeScanner = null;
+
+function startBarcodeScanner() {
+    const modal = document.getElementById('barcodeScannerModal');
+    modal.style.display = 'block';
+    
+    if (html5QrcodeScanner) {
+        html5QrcodeScanner.start(
+            { facingMode: "environment" },
+            {
+                fps: 10,
+                qrbox: { width: 250, height: 250 }
+            },
+            onBarcodeScanned,
+            onScanFailure
+        );
+    } else {
+        html5QrcodeScanner = new Html5Qrcode("reader");
+        html5QrcodeScanner.start(
+            { facingMode: "environment" },
+            {
+                fps: 10,
+                qrbox: { width: 250, height: 250 }
+            },
+            onBarcodeScanned,
+            onScanFailure
+        );
+    }
+}
+
+function onBarcodeScanned(decodedText, decodedResult) {
+    // Stop scanning
+    if (html5QrcodeScanner) {
+        html5QrcodeScanner.stop();
+    }
+    
+    // Close modal
+    const modal = document.getElementById('barcodeScannerModal');
+    modal.style.display = 'none';
+    
+    // Extract tracking code from URL if it's a full URL
+    let trackingCode = decodedText;
+    if (decodedText.includes('?code=')) {
+        const urlParams = new URLSearchParams(decodedText.split('?')[1]);
+        trackingCode = urlParams.get('code');
+    }
+    
+    // Set tracking code and track
+    document.getElementById('trackingCode').value = trackingCode;
+    trackShipment();
+}
+
+function onScanFailure(error) {
+    // Handle scan failure silently
+}
+
+function closeBarcodeScanner() {
+    const modal = document.getElementById('barcodeScannerModal');
+    modal.style.display = 'none';
+    
+    if (html5QrcodeScanner) {
+        html5QrcodeScanner.stop();
+    }
+}
+
 // Show notification
 function showNotification(message, type = 'info') {
     // Remove existing notification

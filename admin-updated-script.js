@@ -2013,6 +2013,10 @@ function updatePackageContent(index, value) {
 
 // Add functions
 function addRoutePoint() {
+    console.log('addRoutePoint called');
+    console.log('trackingData:', trackingData);
+    console.log('trackingData.route:', trackingData ? trackingData.route : 'trackingData is null');
+    
     if (!trackingData || !trackingData.route) {
         showNotification('Please select a shipment first', 'error');
         return;
@@ -2399,7 +2403,12 @@ function clearNotifications() {
 
 // Customer Care Chat Functions
 function showCustomerCare() {
+    console.log('showCustomerCare called');
     const modal = document.getElementById('customerCareModal');
+    if (!modal) {
+        console.error('customerCareModal not found');
+        return;
+    }
     modal.style.display = 'block';
     populateChatShipmentSelector();
 }
