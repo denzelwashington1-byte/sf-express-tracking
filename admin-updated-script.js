@@ -500,8 +500,15 @@ function saveShipments(shipments) {
         });
 }
 
-async function createShipment(senderName, senderAddress, receiverName, receiverAddress, packageContents, weight, currentCity, currentLat, currentLng, privateCode) {
+async function createShipment(senderName, senderAddress, senderPhone, senderEmail, receiverName, receiverAddress, receiverPhone, receiverEmail, packageContents, weight, currentCity, currentLat, currentLng, privateCode) {
     const shipments = await getShipments();
+    
+    // Check shipment limit (max 100)
+    const shipmentCount = Object.keys(shipments).length;
+    if (shipmentCount >= 100) {
+        return { success: false, message: 'Maximum shipment limit (100) reached' };
+    }
+    
     const trackingCode = generateTrackingCode();
     const shipmentId = Date.now();
     
@@ -510,11 +517,15 @@ async function createShipment(senderName, senderAddress, receiverName, receiverA
         trackingCode: trackingCode,
         sender: {
             name: senderName,
-            address: senderAddress
+            address: senderAddress,
+            phone: senderPhone,
+            email: senderEmail
         },
         receiver: {
             name: receiverName,
-            address: receiverAddress
+            address: receiverAddress,
+            phone: receiverPhone,
+            email: receiverEmail
         },
         packageDetails: {
             contents: packageContents,
@@ -527,7 +538,7 @@ async function createShipment(senderName, senderAddress, receiverName, receiverA
         },
         currentStatus: 'Pending',
         privateCode: privateCode,
-        trackingUrl: `${window.location.origin}/?code=${trackingCode}`,
+        trackingUrl: `${window.location.origin}/track.html?code=${trackingCode}`,
         createdAt: new Date().toISOString(),
         lastUpdate: new Date().toLocaleString('en-US', { 
             month: 'short', 
@@ -1577,11 +1588,23 @@ async function showCreateShipmentModal(customer = null) {
     const senderAddress = prompt('Enter sender address:', customer ? customer.address : '');
     if (!senderAddress) return;
     
+    const senderPhone = prompt('Enter sender phone:');
+    if (!senderPhone) return;
+    
+    const senderEmail = prompt('Enter sender email:');
+    if (!senderEmail) return;
+    
     const receiverName = prompt('Enter receiver name:');
     if (!receiverName) return;
     
     const receiverAddress = prompt('Enter receiver address:');
     if (!receiverAddress) return;
+    
+    const receiverPhone = prompt('Enter receiver phone:');
+    if (!receiverPhone) return;
+    
+    const receiverEmail = prompt('Enter receiver email:');
+    if (!receiverEmail) return;
     
     const packageContents = prompt('Enter package contents (comma separated):');
     if (!packageContents) return;
@@ -1605,8 +1628,12 @@ async function showCreateShipmentModal(customer = null) {
     const result = await createShipment(
         senderName,
         senderAddress,
+        senderPhone,
+        senderEmail,
         receiverName,
         receiverAddress,
+        receiverPhone,
+        receiverEmail,
         packageContents.split(',').map(item => item.trim()),
         weight,
         currentCity,
@@ -1622,8 +1649,8 @@ async function showCreateShipmentModal(customer = null) {
         loadShipmentList();
         populateShipmentSelector();
     } else {
-        console.error('Shipment creation failed');
-        showNotification('Failed to create shipment', 'error');
+        console.error('Shipment creation failed:', result.message);
+        showNotification(result.message || 'Failed to create shipment', 'error');
     }
 }
 
