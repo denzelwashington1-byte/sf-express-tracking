@@ -41,6 +41,11 @@ document.addEventListener('DOMContentLoaded', async function() {
     await loadShipmentList();
     loadCustomerList();
     await populateShipmentSelector();
+    
+    // Request notification permission
+    if (Notification.permission === 'default') {
+        Notification.requestPermission();
+    }
 });
 
 // User Management System
@@ -2349,13 +2354,6 @@ function clearNotifications() {
         showNotification('Notifications cleared', 'success');
     }
 }
-
-// Request notification permission on page load
-document.addEventListener('DOMContentLoaded', function() {
-    if (Notification.permission === 'default') {
-        Notification.requestPermission();
-    }
-});
 
 // Keyboard shortcuts
 document.addEventListener('keydown', function(e) {
