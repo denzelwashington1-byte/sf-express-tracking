@@ -26,6 +26,11 @@ try {
 // Firebase database reference
 const db = firebase.database();
 const shipmentsRef = db.ref('shipments');
+const chatsRef = db.ref('chats');
+
+// Chat variables
+let currentTrackingCode = null;
+let chatListener = null;
 
 // Initialize the tracking page
 document.addEventListener('DOMContentLoaded', function() {
@@ -62,6 +67,9 @@ async function trackShipment() {
         return;
     }
     
+    // Set current tracking code for chat
+    currentTrackingCode = trackingCode;
+    
     // Show loading state
     const button = document.querySelector('.tracking-button');
     const originalText = button.textContent;
@@ -74,6 +82,8 @@ async function trackShipment() {
     if (shipmentData) {
         displayTrackingResults(shipmentData);
         showNotification('Tracking information found!', 'success');
+        // Load chat messages for this shipment
+        loadChatMessages(trackingCode);
     } else {
         showNotification('Tracking code not found. Please check and try again.', 'error');
     }
@@ -253,7 +263,7 @@ function initializeMap(data) {
             `).openPopup();
         }
     }
-    
+
     // Simulate real-time updates
     simulateRealTimeUpdates(data);
 }
@@ -322,6 +332,86 @@ function updateTimeline(timelineData) {
         timeline.appendChild(timelineItem);
     });
 }
+
+// Chat functions
+function loadChatMessages(trackingCode) {
+    // Remove existing listener if any
+    if (chatListener) {
+        chatsRef.child(trackingCode).off('value', chatListener);
+    }
+    
+    // Listen for chat messages
+    chatListener = chatsRef.child(trackingCode).on('value', (snapshot) => {
+        const chatMessages = document.getElementById('chatMessages');
+        chatMessages.innerHTML = '';
+        
+        if (snapshot.exists()) {
+            const messages = snapshot.val();
+            Object.values(messages).forEach(msg => {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = `chat-message ${msg.sender === 'customer' ? 'customer' : 'admin'}`;
+                messageDiv.innerHTML = `
+                    <div class="message-content">
+                        <p>${msg.message}</p>
+                        <span class="message-time">${msg.timestamp}</span>
+                    </div>
+                `;
+                chatMessages.appendChild(messageDiv);
+            });
+        }
+        
+        // Add welcome message if no messages
+        if (!snapshot.exists()) {
+            const welcomeDiv = document.createElement('div');
+            welcomeDiv.className = 'chat-message system';
+            welcomeDiv.innerHTML = `
+                <div class="message-content">
+                    <p>Welcome to SF Express Customer Care. How can we help you today?</p>
+                </div>
+            `;
+            chatMessages.appendChild(welcomeDiv);
+        }
+        
+        // Scroll to bottom
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    });
+}
+
+function sendChatMessage() {
+    const chatInput = document.getElementById('chatInput');
+    const message = chatInput.value.trim();
+    
+    if (!message || !currentTrackingCode) {
+        return;
+    }
+    
+    const newMessage = {
+        message: message,
+        sender: 'customer',
+        timestamp: new Date().toLocaleString('en-US', {
+            month: 'short',
+            day: 'numeric',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        })
+    };
+    
+    chatsRef.child(currentTrackingCode).push(newMessage);
+    chatInput.value = '';
+}
+
+// Handle Enter key for chat
+document.addEventListener('DOMContentLoaded', function() {
+    const chatInput = document.getElementById('chatInput');
+    if (chatInput) {
+        chatInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                sendChatMessage();
+            }
+        });
+    }
+});
 
 // Show notification
 function showNotification(message, type = 'info') {
