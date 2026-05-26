@@ -32,6 +32,165 @@ const chatsRef = db.ref('chats');
 let currentTrackingCode = null;
 let chatListener = null;
 
+// Multi-language support
+const translations = {
+    en: {
+        title: 'Track Your Shipment',
+        subtitle: 'Enter your tracking code to see real-time shipment status',
+        placeholder: 'Enter tracking code',
+        track: 'Track',
+        scanBarcode: '📷 Scan Barcode',
+        hint: 'Enter the private tracking code provided by the sender',
+        trackingDetails: 'Shipment Tracking Details',
+        trackingCode: 'Tracking Code:',
+        currentStatus: 'Current Status',
+        sender: 'Sender',
+        receiver: 'Receiver',
+        package: 'Package Information',
+        timeline: 'Shipment Timeline',
+        customerCare: 'Customer Care',
+        online: 'Online',
+        typeMessage: 'Type your message...',
+        welcome: 'Welcome to SF Express Customer Care. How can we help you today?'
+    },
+    es: {
+        title: 'Rastrear su Envío',
+        subtitle: 'Ingrese su código de seguimiento para ver el estado en tiempo real',
+        placeholder: 'Ingrese código de seguimiento',
+        track: 'Rastrear',
+        scanBarcode: '📷 Escanear Código',
+        hint: 'Ingrese el código de seguimiento privado proporcionado por el remitente',
+        trackingDetails: 'Detalles de Seguimiento de Envío',
+        trackingCode: 'Código de Seguimiento:',
+        currentStatus: 'Estado Actual',
+        sender: 'Remitente',
+        receiver: 'Destinatario',
+        package: 'Información del Paquete',
+        timeline: 'Cronología del Envío',
+        customerCare: 'Atención al Cliente',
+        online: 'En línea',
+        typeMessage: 'Escriba su mensaje...',
+        welcome: 'Bienvenido a Atención al Cliente de SF Express. ¿Cómo podemos ayudarle hoy?'
+    },
+    fr: {
+        title: 'Suivre votre Expédition',
+        subtitle: 'Entrez votre code de suivi pour voir le statut en temps réel',
+        placeholder: 'Entrez le code de suivi',
+        track: 'Suivre',
+        scanBarcode: '📷 Scanner le Code',
+        hint: 'Entrez le code de suivi privé fourni par l\'expéditeur',
+        trackingDetails: 'Détails de Suivi d\'Expédition',
+        trackingCode: 'Code de Suivi:',
+        currentStatus: 'Statut Actuel',
+        sender: 'Expéditeur',
+        receiver: 'Destinataire',
+        package: 'Informations sur le Colis',
+        timeline: 'Chronologie de l\'Expédition',
+        customerCare: 'Service Client',
+        online: 'En ligne',
+        typeMessage: 'Tapez votre message...',
+        welcome: 'Bienvenue au Service Client SF Express. Comment pouvons-nous vous aider aujourd\'hui?'
+    },
+    de: {
+        title: 'Sendung Verfolgen',
+        subtitle: 'Geben Sie Ihre Sendungsnummer ein, um den Echtzeit-Status zu sehen',
+        placeholder: 'Sendungsnummer eingeben',
+        track: 'Verfolgen',
+        scanBarcode: '📷 Barcode Scannen',
+        hint: 'Geben Sie die private Sendungsnummer ein, die vom Absender bereitgestellt wurde',
+        trackingDetails: 'Sendungsverfolgungsdetails',
+        trackingCode: 'Sendungsnummer:',
+        currentStatus: 'Aktueller Status',
+        sender: 'Absender',
+        receiver: 'Empfänger',
+        package: 'Paketinformationen',
+        timeline: 'Sendungszeitlinie',
+        customerCare: 'Kundenservice',
+        online: 'Online',
+        typeMessage: 'Geben Sie Ihre Nachricht ein...',
+        welcome: 'Willkommen beim SF Express Kundenservice. Wie können wir Ihnen heute helfen?'
+    },
+    zh: {
+        title: '追踪您的货物',
+        subtitle: '输入您的追踪码以查看实时货物状态',
+        placeholder: '输入追踪码',
+        track: '追踪',
+        scanBarcode: '📷 扫描条形码',
+        hint: '输入寄件人提供的私人追踪码',
+        trackingDetails: '货物追踪详情',
+        trackingCode: '追踪码：',
+        currentStatus: '当前状态',
+        sender: '寄件人',
+        receiver: '收件人',
+        package: '包裹信息',
+        timeline: '货物时间线',
+        customerCare: '客户服务',
+        online: '在线',
+        typeMessage: '输入您的消息...',
+        welcome: '欢迎使用SF Express客户服务。我们今天能为您做些什么？'
+    },
+    ar: {
+        title: 'تتبع شحنتك',
+        subtitle: 'أدخل رمز التتبع لرؤية حالة الشحنة في الوقت الفعلي',
+        placeholder: 'أدخل رمز التتبع',
+        track: 'تتبع',
+        scanBarcode: '📷 مسح الباركود',
+        hint: 'أدخل رمز التتبع الخاص المقدم من المرسل',
+        trackingDetails: 'تفاصيل تتبع الشحنة',
+        trackingCode: 'رمز التتبع:',
+        currentStatus: 'الحالة الحالية',
+        sender: 'المرسل',
+        receiver: 'المستلم',
+        package: 'معلومات الطرد',
+        timeline: 'الجدول الزمني للشحنة',
+        customerCare: 'خدمة العملاء',
+        online: 'متصل',
+        typeMessage: 'اكتب رسالتك...',
+        welcome: 'مرحبًا بك في خدمة عملاء SF Express. كيف يمكننا مساعدتك اليوم؟'
+    }
+};
+
+let currentLanguage = 'en';
+
+function changeLanguage(lang) {
+    currentLanguage = lang;
+    const t = translations[lang];
+    
+    // Update page elements
+    document.querySelector('.hero-title').textContent = t.title;
+    document.querySelector('.hero-subtitle').textContent = t.subtitle;
+    document.querySelector('.tracking-input').placeholder = t.placeholder;
+    document.querySelector('.tracking-button').textContent = t.track;
+    document.querySelector('.barcode-scan-btn').textContent = t.scanBarcode;
+    document.querySelector('.form-hint').textContent = t.hint;
+    
+    // Update tracking results if visible
+    const resultsHeader = document.querySelector('.results-header h2');
+    if (resultsHeader) resultsHeader.textContent = t.trackingDetails;
+    
+    const trackingLabel = document.querySelector('.tracking-number-display .label');
+    if (trackingLabel) trackingLabel.textContent = t.trackingCode;
+    
+    // Update chat widget
+    const chatTitle = document.querySelector('.chat-widget-title span:first-child');
+    if (chatTitle) chatTitle.textContent = t.customerCare;
+    
+    const chatStatus = document.querySelector('.chat-widget-status');
+    if (chatStatus) chatStatus.textContent = t.online;
+    
+    const chatInput = document.getElementById('chatInput');
+    if (chatInput) chatInput.placeholder = t.typeMessage;
+    
+    // Update RTL for Arabic
+    if (lang === 'ar') {
+        document.body.style.direction = 'rtl';
+        document.body.style.textAlign = 'right';
+    } else {
+        document.body.style.direction = 'ltr';
+        document.body.style.textAlign = 'left';
+    }
+}
+
 // Initialize the tracking page
 document.addEventListener('DOMContentLoaded', function() {
     // Get tracking code from URL parameter

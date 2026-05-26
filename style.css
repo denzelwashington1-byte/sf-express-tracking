@@ -705,6 +705,33 @@ body {
     background: var(--primary-color);
 }
 
+/* Language Selector */
+.nav-language {
+    display: flex;
+    align-items: center;
+}
+
+.nav-language select {
+    padding: 0.5rem 1rem;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    background: white;
+    color: var(--text-primary);
+    font-size: 0.9rem;
+    cursor: pointer;
+    outline: none;
+    transition: var(--transition);
+}
+
+.nav-language select:hover {
+    border-color: var(--secondary-color);
+}
+
+.nav-language select:focus {
+    border-color: var(--secondary-color);
+    box-shadow: 0 0 0 3px rgba(0, 116, 217, 0.1);
+}
+
 /* Barcode Scanner Button */
 .barcode-scan-btn {
     margin-top: 1rem;

@@ -2017,10 +2017,16 @@ function addRoutePoint() {
     console.log('trackingData:', trackingData);
     console.log('trackingData.route:', trackingData ? trackingData.route : 'trackingData is null');
     
-    if (!trackingData || !trackingData.route) {
+    if (!trackingData) {
         showNotification('Please select a shipment first', 'error');
         return;
     }
+    
+    // Initialize route array if it doesn't exist
+    if (!trackingData.route) {
+        trackingData.route = [];
+    }
+    
     const newPoint = {
         lat: 0,
         lng: 0,
@@ -2032,6 +2038,51 @@ function addRoutePoint() {
     populateRouteList();
     updateMapMarkers();
     showNotification('Route point added', 'success');
+}
+
+// Automated Status Updates
+function autoUpdateShipmentStatus(trackingCode) {
+    getShipments().then(shipments => {
+        const shipment = shipments[trackingCode];
+        if (!shipment) return;
+        
+        const now = new Date();
+        const createdAt = new Date(shipment.createdAt);
+        const hoursSinceCreation = (now - createdAt) / (1000 * 60 * 60);
+        
+        // Auto-update status based on time and location
+        if (shipment.currentStatus === 'Pending' && hoursSinceCreation >= 1) {
+            shipment.currentStatus = 'In Transit';
+            addTimelineEvent(shipment, 'Status Updated', 'Shipment picked up and in transit', shipment.currentLocation.city);
+        } else if (shipment.currentStatus === 'In Transit' && hoursSinceCreation >= 24) {
+            shipment.currentStatus = 'Out for Delivery';
+            addTimelineEvent(shipment, 'Status Updated', 'Shipment out for delivery', shipment.receiver.address);
+        } else if (shipment.currentStatus === 'Out for Delivery' && hoursSinceCreation >= 48) {
+            shipment.currentStatus = 'Delivered';
+            addTimelineEvent(shipment, 'Status Updated', 'Shipment delivered successfully', shipment.receiver.address);
+        }
+        
+        // Save updated shipment
+        shipments[trackingCode] = shipment;
+        saveShipments(shipments);
+    });
+}
+
+function addTimelineEvent(shipment, status, description, location) {
+    const event = {
+        status: status,
+        description: description,
+        date: new Date().toLocaleString('en-US', {
+            month: 'short',
+            day: 'numeric',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        }),
+        location: location,
+        completed: true
+    };
+    shipment.timeline.push(event);
 }
 
 function addTimelineEvent() {
