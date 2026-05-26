@@ -55,7 +55,7 @@ async function loadTrackingDataFromStorage() {
         }
     }
     
-    // Load shipments from Firebase
+    // Load shipments from Firebase (priority for cross-device tracking)
     try {
         console.log('Attempting to load shipments from Firebase...');
         const snapshot = await shipmentsRef.once('value');
@@ -65,10 +65,21 @@ async function loadTrackingDataFromStorage() {
             console.log('Shipments loaded from Firebase successfully:', Object.keys(firebaseShipments));
         } else {
             console.log('Firebase database is empty - no shipments found');
+            // Fallback to localStorage only if Firebase is empty
+            const adminShipments = localStorage.getItem('sfExpressShipments');
+            if (adminShipments) {
+                try {
+                    const parsedShipments = JSON.parse(adminShipments);
+                    Object.assign(trackingDatabase, parsedShipments);
+                    console.log('Loaded shipments from localStorage as fallback');
+                } catch (e) {
+                    console.error('Error loading admin shipments from localStorage:', e);
+                }
+            }
         }
     } catch (e) {
         console.error('Error loading shipments from Firebase:', e);
-        // Fallback to localStorage
+        // Fallback to localStorage on Firebase error
         const adminShipments = localStorage.getItem('sfExpressShipments');
         if (adminShipments) {
             try {
