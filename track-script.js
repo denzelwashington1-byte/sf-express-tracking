@@ -334,6 +334,19 @@ function updateTimeline(timelineData) {
 }
 
 // Chat functions
+function toggleChatWidget() {
+    const popup = document.getElementById('chatWidgetPopup');
+    const icon = document.getElementById('chatWidgetIcon');
+    
+    if (popup.style.display === 'none') {
+        popup.style.display = 'flex';
+        icon.textContent = '×';
+    } else {
+        popup.style.display = 'none';
+        icon.textContent = '💬';
+    }
+}
+
 function loadChatMessages(trackingCode) {
     // Remove existing listener if any
     if (chatListener) {

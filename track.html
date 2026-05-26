@@ -183,26 +183,36 @@
                 <div class="timeline" id="timeline">
                 </div>
             </div>
+        </div>
+    </section>
 
-            <!-- Customer Care Chat -->
-            <div class="chat-section">
-                <h3>Customer Care Live Chat</h3>
-                <div class="chat-container">
-                    <div class="chat-messages" id="chatMessages">
-                        <div class="chat-message system">
-                            <div class="message-content">
-                                <p>Welcome to SF Express Customer Care. How can we help you today?</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="chat-input-container">
-                        <input type="text" id="chatInput" placeholder="Type your message..." />
-                        <button onclick="sendChatMessage()" class="chat-send-btn">Send</button>
+    <!-- Messenger-style Chat Widget -->
+    <div id="chatWidget" class="chat-widget">
+        <div id="chatWidgetButton" class="chat-widget-button" onclick="toggleChatWidget()">
+            <span id="chatWidgetIcon">💬</span>
+            <span id="chatWidgetBadge" class="chat-widget-badge" style="display: none;">1</span>
+        </div>
+        <div id="chatWidgetPopup" class="chat-widget-popup" style="display: none;">
+            <div class="chat-widget-header">
+                <div class="chat-widget-title">
+                    <span>Customer Care</span>
+                    <span class="chat-widget-status">Online</span>
+                </div>
+                <button onclick="toggleChatWidget()" class="chat-widget-close">×</button>
+            </div>
+            <div class="chat-widget-messages" id="chatMessages">
+                <div class="chat-message system">
+                    <div class="message-content">
+                        <p>Welcome to SF Express Customer Care. How can we help you today?</p>
                     </div>
                 </div>
             </div>
+            <div class="chat-widget-input">
+                <input type="text" id="chatInput" placeholder="Type your message..." />
+                <button onclick="sendChatMessage()" class="chat-widget-send">➤</button>
+            </div>
         </div>
-    </section>
+    </div>
 
     <!-- Footer -->
     <footer class="footer">
