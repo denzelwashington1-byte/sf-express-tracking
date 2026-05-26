@@ -3,6 +3,30 @@ let trackingMap;
 let currentMarker;
 let routeLine;
 
+// Firebase Configuration
+const firebaseConfig = {
+  apiKey: "AIzaSyAhFmYpQvINgDoE4PWkP6AwzyuY8OxwTP8",
+  authDomain: "sfexpressinternational-7b50b.firebaseapp.com",
+  databaseURL: "https://sfexpressinternational-7b50b-default-rtdb.firebaseio.com",
+  projectId: "sfexpressinternational-7b50b",
+  storageBucket: "sfexpressinternational-7b50b.firebasestorage.app",
+  messagingSenderId: "808031073166",
+  appId: "1:808031073166:web:ced6ffc6d9e98453bceadf",
+  measurementId: "G-SWT5E7WQZX"
+};
+
+// Initialize Firebase
+try {
+    firebase.initializeApp(firebaseConfig);
+    console.log('Firebase initialized successfully');
+} catch (e) {
+    console.error('Firebase initialization error:', e);
+}
+
+// Firebase database reference
+const db = firebase.database();
+const shipmentsRef = db.ref('shipments');
+
 // Initialize the tracking page
 document.addEventListener('DOMContentLoaded', function() {
     // Get tracking code from URL parameter
@@ -30,7 +54,7 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // Track shipment function
-function trackShipment() {
+async function trackShipment() {
     const trackingCode = document.getElementById('trackingCode').value.trim();
     
     if (!trackingCode) {
@@ -44,40 +68,52 @@ function trackShipment() {
     button.innerHTML = '<span class="loading"></span> Tracking...';
     button.disabled = true;
     
-    // Simulate API call delay
-    setTimeout(() => {
-        const shipmentData = getShipmentData(trackingCode);
-        
-        if (shipmentData) {
-            displayTrackingResults(shipmentData);
-            showNotification('Tracking information found!', 'success');
-        } else {
-            showNotification('Tracking code not found. Please check and try again.', 'error');
-        }
-        
-        // Reset button
-        button.textContent = originalText;
-        button.disabled = false;
-    }, 1500);
-}
-
-// Get shipment data from localStorage or shipments.json
-function getShipmentData(trackingCode) {
-    // Try localStorage first
-    const localShipments = JSON.parse(localStorage.getItem('sfExpressShipments')) || {};
-    if (localShipments[trackingCode]) {
-        return localShipments[trackingCode];
+    // Load from Firebase
+    const shipmentData = await getShipmentData(trackingCode);
+    
+    if (shipmentData) {
+        displayTrackingResults(shipmentData);
+        showNotification('Tracking information found!', 'success');
+    } else {
+        showNotification('Tracking code not found. Please check and try again.', 'error');
     }
     
-    // Try fetching from shipments.json
+    // Reset button
+    button.textContent = originalText;
+    button.disabled = false;
+}
+
+// Get shipment data from Firebase (priority for cross-device tracking)
+async function getShipmentData(trackingCode) {
+    console.log('Loading shipment data for:', trackingCode);
+    
+    // Try Firebase first
     try {
-        const response = fetch('shipments.json');
-        const data = response.json();
-        return data[trackingCode] || null;
+        const snapshot = await shipmentsRef.once('value');
+        if (snapshot.exists()) {
+            const firebaseShipments = snapshot.val();
+            console.log('Shipments loaded from Firebase:', Object.keys(firebaseShipments));
+            if (firebaseShipments[trackingCode]) {
+                return firebaseShipments[trackingCode];
+            }
+        }
     } catch (e) {
-        console.error('Error fetching shipments:', e);
-        return null;
+        console.error('Error loading from Firebase:', e);
     }
+    
+    // Fallback to localStorage
+    try {
+        const localShipments = JSON.parse(localStorage.getItem('sfExpressShipments')) || {};
+        if (localShipments[trackingCode]) {
+            console.log('Shipment loaded from localStorage');
+            return localShipments[trackingCode];
+        }
+    } catch (e) {
+        console.error('Error loading from localStorage:', e);
+    }
+    
+    console.log('Shipment not found');
+    return null;
 }
 
 // Display tracking results
