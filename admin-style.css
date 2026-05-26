@@ -1488,6 +1488,82 @@ textarea:focus {
     margin-top: 1rem;
 }
 
+/* Mobile Responsive Styles */
+@media (max-width: 768px) {
+    .header {
+        flex-direction: column;
+        padding: 1rem;
+    }
+    
+    .header-actions {
+        flex-direction: column;
+        width: 100%;
+        margin-top: 1rem;
+    }
+    
+    .header-actions button {
+        width: 100%;
+        margin-bottom: 0.5rem;
+    }
+    
+    .action-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .status-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .shipment-item {
+        flex-direction: column;
+    }
+    
+    .shipment-actions {
+        flex-direction: column;
+        width: 100%;
+    }
+    
+    .shipment-actions button {
+        width: 100%;
+        margin-bottom: 0.5rem;
+    }
+    
+    .editor-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .contact-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .route-list {
+        max-height: 300px;
+    }
+    
+    .modal-content {
+        width: 95%;
+        max-height: 90vh;
+        overflow-y: auto;
+    }
+    
+    .admin-container {
+        padding: 1rem;
+    }
+    
+    .dashboard-analytics {
+        grid-template-columns: 1fr;
+    }
+    
+    .shipment-controls {
+        flex-direction: column;
+    }
+    
+    .shipment-controls button {
+        width: 100%;
+        margin-bottom: 0.5rem;
+    }
+}
+
 .mt-3 {
     margin-top: 1.5rem;
 }

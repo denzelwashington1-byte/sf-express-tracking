@@ -53,19 +53,7 @@ function initializeUserSystem() {
     // Check if users exist in localStorage
     let users = JSON.parse(localStorage.getItem('sfExpressUsers')) || [];
     
-    // Add default admin if no users exist
-    if (users.length === 0) {
-        const defaultAdmin = {
-            id: Date.now(),
-            email: 'sfexpressdelivery@gmail.com',
-            username: 'SFEXPRESS.om',
-            password: 'SFEXPRESS.Pass',
-            role: 'admin',
-            createdAt: new Date().toISOString()
-        };
-        users.push(defaultAdmin);
-        localStorage.setItem('sfExpressUsers', JSON.stringify(users));
-    }
+    // No default admin - users must be created through signup
 }
 
 function getUsers() {
@@ -116,25 +104,6 @@ function createUser(email, username, password) {
 
 function authenticateUser(username, password) {
     const user = findUserByUsername(username);
-    
-    // Fallback for default admin credentials
-    if (!user && username === 'SFEXPRESS.om' && password === 'SFEXPRESS.Pass') {
-        const defaultAdmin = {
-            id: Date.now(),
-            email: 'sfexpressdelivery@gmail.com',
-            username: 'SFEXPRESS.om',
-            password: 'SFEXPRESS.Pass',
-            role: 'admin',
-            createdAt: new Date().toISOString()
-        };
-        
-        // Add to localStorage
-        const users = getUsers();
-        users.push(defaultAdmin);
-        saveUsers(users);
-        
-        return { success: true, user: defaultAdmin };
-    }
     
     if (!user) {
         return { success: false, message: 'Invalid username or password' };
@@ -504,6 +473,10 @@ function getShipments() {
 
 function saveShipments(shipments) {
     console.log('Saving shipments...');
+    console.log('Firebase initialized:', !!firebase);
+    console.log('Database reference:', !!db);
+    console.log('Shipments reference:', !!shipmentsRef);
+    
     // Save to Firebase first for cross-device tracking
     shipmentsRef.set(shipments)
         .then(() => {
@@ -514,6 +487,8 @@ function saveShipments(shipments) {
         })
         .catch((error) => {
             console.error('Firebase save error (using localStorage as fallback):', error);
+            console.error('Error code:', error.code);
+            console.error('Error message:', error.message);
             // Fallback to localStorage only if Firebase fails
             localStorage.setItem('sfExpressShipments', JSON.stringify(shipments));
             console.log('Shipments saved to localStorage as fallback');
@@ -1981,6 +1956,10 @@ function updatePackageContent(index, value) {
 
 // Add functions
 function addRoutePoint() {
+    if (!trackingData || !trackingData.route) {
+        showNotification('Please select a shipment first', 'error');
+        return;
+    }
     const newPoint = {
         lat: 0,
         lng: 0,
