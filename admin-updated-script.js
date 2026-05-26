@@ -226,19 +226,24 @@ async function loadTrackingData() {
 // Setup event listeners
 function setupEventListeners() {
     // Login form
-    document.getElementById('loginForm').addEventListener('submit', handleLogin);
+    const loginForm = document.getElementById('loginForm');
+    if (loginForm) loginForm.addEventListener('submit', handleLogin);
     
     // Signup form
-    document.getElementById('signupForm').addEventListener('submit', handleSignup);
+    const signupForm = document.getElementById('signupForm');
+    if (signupForm) signupForm.addEventListener('submit', handleSignup);
     
     // Logout button
-    document.getElementById('logoutBtn').addEventListener('click', handleLogout);
+    const logoutBtn = document.getElementById('logoutBtn');
+    if (logoutBtn) logoutBtn.addEventListener('click', handleLogout);
     
     // Save button
-    document.getElementById('saveAllBtn').addEventListener('click', saveToLocalStorage);
+    const saveAllBtn = document.getElementById('saveAllBtn');
+    if (saveAllBtn) saveAllBtn.addEventListener('click', saveToLocalStorage);
     
     // Generate JSON button
-    document.getElementById('generateJsonBtn').addEventListener('click', generateJsonFile);
+    const generateJsonBtn = document.getElementById('generateJsonBtn');
+    if (generateJsonBtn) generateJsonBtn.addEventListener('click', generateJsonFile);
 }
 
 // Toggle between login and signup forms
@@ -770,11 +775,22 @@ async function saveEditorChanges(editorType) {
         const newRoute = [];
         
         routeItems.forEach(item => {
-            const lat = parseFloat(item.querySelector('.route-lat').value);
-            const lng = parseFloat(item.querySelector('.route-lng').value);
-            const city = item.querySelector('.route-city').value;
-            const country = item.querySelector('.route-country').value;
-            const status = item.querySelector('.route-status').value;
+            const latInput = item.querySelector('.route-lat');
+            const lngInput = item.querySelector('.route-lng');
+            const cityInput = item.querySelector('.route-city');
+            const countryInput = item.querySelector('.route-country');
+            const statusInput = item.querySelector('.route-status');
+            
+            if (!latInput || !lngInput || !cityInput || !countryInput || !statusInput) {
+                console.error('Missing route input elements');
+                return;
+            }
+            
+            const lat = parseFloat(latInput.value);
+            const lng = parseFloat(lngInput.value);
+            const city = cityInput.value;
+            const country = countryInput.value;
+            const status = statusInput.value;
             
             newRoute.push({ lat, lng, city, country, status });
         });
@@ -1798,6 +1814,11 @@ function initializeAdminMap() {
 
 // Update map markers
 function updateMapMarkers() {
+    if (!trackingData || !trackingData.route) {
+        console.log('No tracking data or route available for map markers');
+        return;
+    }
+    
     // Clear existing markers
     adminMap.eachLayer(function(layer) {
         if (layer instanceof L.Marker) {
@@ -1939,6 +1960,10 @@ function updateRoutePoint(index, lat, lng) {
 }
 
 function updateRoutePointData(index, field, value) {
+    if (!trackingData || !trackingData.route) {
+        console.log('No tracking data or route available');
+        return;
+    }
     trackingData.route[index][field] = value;
     
     if (field === 'lat' || field === 'lng') {
@@ -2008,6 +2033,10 @@ function addPackageContent() {
 
 // Delete functions
 function deleteRoutePoint(index) {
+    if (!trackingData || !trackingData.route) {
+        showNotification('No route data available', 'error');
+        return;
+    }
     if (confirm('Are you sure you want to delete this route point?')) {
         trackingData.route.splice(index, 1);
         populateRouteList();
